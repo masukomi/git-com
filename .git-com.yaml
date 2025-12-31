@@ -55,5 +55,6 @@ tags:
         - tech-debt
         - refactoring
         - testing
+        - quality-of-life
     record-as: joined-string
     type: multi-select
