@@ -1,7 +1,6 @@
 package prompt
 
 import (
-	"fmt"
 	"strings"
 
 	"git-com/config"
@@ -54,7 +53,6 @@ func HandleMultiSelect(elem config.Element, cfg *config.Config) (string, error) 
 		}
 
 		// Handle "Other…" selection
-		output.Print(fmt.Sprintf("DEBUG: modifiable=%v, selections=%v", elem.IsModifiable(), selections))
 		if elem.IsModifiable() && containsOption(selections, otherOption) {
 			newValue, err := handleOtherSelection(elem.Name, cfg)
 			if err != nil {

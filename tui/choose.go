@@ -229,7 +229,8 @@ func (m chooseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, km.Submit):
 			m.quitting = true
-			if m.limit <= 1 && m.numSelected < 1 {
+			// If nothing is selected, select the cursor item
+			if m.numSelected < 1 {
 				m.items[m.index].selected = true
 			}
 			m.submitted = true
