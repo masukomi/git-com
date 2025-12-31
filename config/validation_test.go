@@ -32,6 +32,43 @@ func TestValidateElement(t *testing.T) {
 			wantErr: true,
 		},
 
+		// Title newline validation
+		{
+			name:    "title with before-string containing newline",
+			elem:    Element{Destination: DestTitle, Type: TypeText, BeforeString: "prefix\n"},
+			wantErr: true,
+		},
+		{
+			name:    "title with after-string containing newline",
+			elem:    Element{Destination: DestTitle, Type: TypeText, AfterString: "\nsuffix"},
+			wantErr: true,
+		},
+		{
+			name:    "title with newline in middle of before-string",
+			elem:    Element{Destination: DestTitle, Type: TypeText, BeforeString: "pre\nfix"},
+			wantErr: true,
+		},
+		{
+			name:    "title with before-string no newline",
+			elem:    Element{Destination: DestTitle, Type: TypeText, BeforeString: "["},
+			wantErr: false,
+		},
+		{
+			name:    "title with after-string no newline",
+			elem:    Element{Destination: DestTitle, Type: TypeText, AfterString: "] "},
+			wantErr: false,
+		},
+		{
+			name:    "body with before-string containing newline is allowed",
+			elem:    Element{Destination: DestBody, Type: TypeText, BeforeString: "\n\nSection: "},
+			wantErr: false,
+		},
+		{
+			name:    "body with after-string containing newline is allowed",
+			elem:    Element{Destination: DestBody, Type: TypeText, AfterString: "\n"},
+			wantErr: false,
+		},
+
 		// Type validation
 		{
 			name:    "missing type without data-type",

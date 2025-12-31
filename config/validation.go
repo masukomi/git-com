@@ -39,6 +39,16 @@ func validateElement(elem Element) error {
 		return fmt.Errorf("invalid destination: %s", elem.Destination)
 	}
 
+	// Title elements cannot have newlines in before-string or after-string
+	if elem.Destination == DestTitle {
+		if strings.Contains(elem.BeforeString, "\n") {
+			return fmt.Errorf("before-string cannot contain newlines for title destination")
+		}
+		if strings.Contains(elem.AfterString, "\n") {
+			return fmt.Errorf("after-string cannot contain newlines for title destination")
+		}
+	}
+
 	// Infer type from data-type if not specified
 	elemType := elem.Type
 	if elemType == "" && elem.DataType != "" {
