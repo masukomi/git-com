@@ -10,6 +10,33 @@ import (
 	"github.com/go-git/go-git/v6/plumbing/object"
 )
 
+// HasStagedFiles checks if there are any staged files in the repository
+func HasStagedFiles() (bool, error) {
+	repo, err := git.PlainOpen(".")
+	if err != nil {
+		return false, err
+	}
+
+	wt, err := repo.Worktree()
+	if err != nil {
+		return false, err
+	}
+
+	status, err := wt.Status()
+	if err != nil {
+		return false, err
+	}
+
+	for _, s := range status {
+		// Check if file has staged changes (Added, Modified, Deleted, Renamed, Copied)
+		if s.Staging != git.Unmodified && s.Staging != git.Untracked {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 // CreateCommit creates a git commit with the given title and body
 func CreateCommit(title, body string) error {
 	// Open the repository

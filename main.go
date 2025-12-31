@@ -33,6 +33,17 @@ func run() int {
 		return 1
 	}
 
+	// Check if there are staged files
+	hasStaged, err := commit.HasStagedFiles()
+	if err != nil {
+		output.PrintError("Error checking staged files: " + err.Error())
+		return 1
+	}
+	if !hasStaged {
+		output.PrintWarningToStderr("You need to stage some files before we can commit.")
+		return 64
+	}
+
 	// Process all elements
 	result, err := prompt.ProcessElements(cfg)
 	if err != nil {

@@ -22,6 +22,11 @@ func PrintWarning(msg string) {
 	yellowPrinter.Println(msg)
 }
 
+// PrintWarningToStderr prints a warning message in yellow to stderr
+func PrintWarningToStderr(msg string) {
+	yellowPrinter.Fprintln(os.Stderr, msg)
+}
+
 // Print prints a message to stdout without coloring
 func Print(msg string) {
 	fmt.Println(msg)
