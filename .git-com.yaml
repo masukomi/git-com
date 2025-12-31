@@ -13,6 +13,7 @@ code-section:
         - git
         - configuration
         - meta
+        - tests
     type: select
 change-type:
     after-string: ': '

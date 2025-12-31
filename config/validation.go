@@ -13,7 +13,7 @@ func ValidateConfig(cfg *Config) bool {
 	valid := true
 	for _, elem := range cfg.Elements {
 		if err := validateElement(elem); err != nil {
-			output.PrintError(fmt.Sprintf("%s was not configured correctly in .git-com.yaml", elem.Name))
+			output.PrintError(fmt.Sprintf("\"%s\" was not configured correctly in .git-com.yaml", elem.Name))
 			valid = false
 		}
 	}
