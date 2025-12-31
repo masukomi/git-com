@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	"git-com/output"
 )
@@ -11,12 +12,23 @@ import (
 // Prints error messages to stderr for invalid elements
 func ValidateConfig(cfg *Config) bool {
 	valid := true
+	hasTitleElement := false
+
 	for _, elem := range cfg.Elements {
+		if elem.Destination == DestTitle {
+			hasTitleElement = true
+		}
 		if err := validateElement(elem); err != nil {
 			output.PrintError(fmt.Sprintf("\"%s\" was not configured correctly in .git-com.yaml", elem.Name))
 			valid = false
 		}
 	}
+
+	if !hasTitleElement {
+		output.PrintError("At least one element in .git-com.yaml must have destination: title")
+		valid = false
+	}
+
 	return valid
 }
 

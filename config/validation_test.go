@@ -433,3 +433,54 @@ func TestTypeInferenceFromDataType(t *testing.T) {
 		t.Errorf("validateElement() should pass for inferred text type, got error: %v", err)
 	}
 }
+
+func TestValidateConfig_RequiresTitleElement(t *testing.T) {
+	tests := []struct {
+		name     string
+		elements []Element
+		want     bool
+	}{
+		{
+			name: "config with title element",
+			elements: []Element{
+				{Name: "title", Destination: DestTitle, Type: TypeText},
+			},
+			want: true,
+		},
+		{
+			name: "config with title and body elements",
+			elements: []Element{
+				{Name: "title", Destination: DestTitle, Type: TypeText},
+				{Name: "body", Destination: DestBody, Type: TypeText},
+			},
+			want: true,
+		},
+		{
+			name: "config with only body elements",
+			elements: []Element{
+				{Name: "desc", Destination: DestBody, Type: TypeText},
+				{Name: "notes", Destination: DestBody, Type: TypeMultilineText},
+			},
+			want: false,
+		},
+		{
+			name:     "empty config",
+			elements: []Element{},
+			want:     false,
+		},
+		{
+			name:     "nil elements",
+			elements: nil,
+			want:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{Elements: tt.elements}
+			if got := ValidateConfig(cfg); got != tt.want {
+				t.Errorf("ValidateConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
