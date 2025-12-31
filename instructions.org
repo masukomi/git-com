@@ -1,6 +1,6 @@
 #+title: Instructions
 
-We're creating a cli tool to help users create consistent commit messages for git. The tool will provide users with
+We're creating a CLI tool to help users create consistent commit messages for git. The tool will provide users with
 - list options for common elements
 - text input for the description
 - confirmation
@@ -8,7 +8,11 @@ We're creating a cli tool to help users create consistent commit messages for gi
 
 Which options we provide to the users, and what order we provide them in will be controlled via a project specific YAML file.
 
-* Section Attributes
+* Elements
+At the top level of the YAML file is a series of named "elements" which contain information on what form of input to display to the user.
+
+See the Example YAML at the end
+* Element Attributes
 
 - required
   - ~destination~ one of the following
@@ -21,8 +25,12 @@ Which options we provide to the users, and what order we provide them in will be
     - ~multi-select~
     - ~confirmation~
 - optional
+  - ~instructions~: a string
   - ~before-string~: a string
   - ~after-string~: a string
+  - ~allow-empty~ one of:
+    - ~true~
+    - ~false~
 
 * Attribute Details
 associated data for each type
@@ -45,33 +53,60 @@ associated data for each type
   - a list of values to select from
 
 ~text~
-- (optional) ~max-length~: an integer
 - (optional) ~placeholder~: a string
-
-~confirmation~
-- ~confirmed-string~: any string
-- ~rejected-string~: any string
+- (optional) ~data-type~
+  - ~integer~
+  - ~float~
+  - ~string~
 
 
 
 * Implementation
-It will leverage the =gum= library from Charm (see below) to facilitate easy input of recurring elements.
-It will leverage the =color= library to facilitate the coloring of text.
+- It will leverage the =gum= library from Charm (see below) to facilitate easy input of recurring elements.
+- It will leverage the =color= library to facilitate the coloring of text.
+- If the user hits ~Ctrl+c~ at any time the program will exit gracefully with an exit code of 1
+- The first thing the script the tool should do is read in the YAML and make sure that each element has all the required fields for its ~type~. If one of the elements does not have all its required fields, or one of the fields has an invalid value we should output a line of red text to STANDARD ERROR that says ="{{element_name}} was not configured correctly in .git-com.yaml= Replace ={{element_name}}= with the top level entry in the YAML for the element we are validating. In the example YAML below the element names are: =code-section=, =change-type=, =commit-title=, =commit-description=, =ticket-number=, and =tags=
+- Elements will be displayed to the user one at a time, in the order they appear in the YAML
+- After a user has entered / selected information for an element the program will clear the terminal and present the next element.
+- The program will have a ~title~ string variable that is initially empty.
+- The program will have a ~body~ string variable that is initially empty.
+- The user submitted value for a ~text~ or ~multiline-text~ element should always be trimmed of leading and trailing whitespace before any other processing.
+- When a ~data-type~ is specified:
+  - If a text element has a ~data-type~ of ~integer~ we must validate that the user's input matches ~/^\d+$/~
+  - If a text element has a ~data-type~ of ~float~ we must validate that the user's input matches ~/^\d+.\d+$/~
+  - If a text element has a ~data-type~ of ~string~ we accept their input and move on to checking for the ~allow-empty~ attribute.
+  - If the user's input does not pass validation we restart the process of requesting the user's input for this element, but precede the normal behavior with a line of red text that says ="Your input must be a {{data_type_value}}"= the ={{data_type_value}}= section should be replaced with whatever the value of the data type specified in this element's YAML is.
+- IF the user makes no selection, or enters an empty string…
+  - If ~allow-empty~ is present AND set to ~true~ we do nothing with the result, and move on to the next element
+  - If ~allow-empty~ is either NOT present OR it is set to ~false~ we restart the process of requesting the user's input for this element, but precede the normal behavior with a line of yellow text that says ="This input is required."=
+- If a ~multi-select~ element has a ~record-as~ value of ~list~ does not have a ~bullet-string~ defined we will assume a ~bullet-string~ of ="- "=
+- If a ~multi-select~ element has a ~record-as~ value of ~~joined-string~ does not have a ~join-string~ defined we will assume a ~join-string~ of =", "=
+- The values returned from a multi-select with a
+- If present, the ~before-string~ should be prepended to the element's value.
+- If present, the ~after-string~ should be appended to the element's value.
+- All elements with a ~destination~ of ~title~ will have their submitted data (plus any ~before-string~ and ~after-string~) appended to the ~title~ variable
+- All elements with a ~destination~ of ~body~ will have their submitted data (plus any ~before-string~ and ~after-string~) appended to the ~body~ variable.
+- When there are no more elements to display, the program will attempt to make a git commit with the ~title~ and ~body~
+  If the commit is successful it will exit with an exit code of 0. If it is unsuccessful it will exit with whatever the git library recommends for the situation.
 
-- ~select~ will utilize the =choose= functionality from =gum= with a =limit= of 1
+
+* How to work with "gum"
+- ~select~ type elements will utilize the =choose= functionality from =gum= with a =limit= of 1
   If the user's YAML specifies that it is ~modifiable~ add an ="Other…"= option to the end of the list.
   If the user chooses ="Other…"= we should
-  - display a ~text~ input with
-- ~multiple-select~ will utilize the =choose= functionality from =gum=
+  - display a ~text~ input with the ~instructions~ ="Add & select a new item"=
+- ~multiple-select~ type elements will utilize the =choose= functionality from =gum=
   If the user's YAML specifies a limit we will use it. If it does not we will specify =no-limit=
-- ~text~ will utilize the =input= functionality from =gum=
+- ~text~ type elements will utilize the =input= functionality from =gum=
   If the user's YAML specifies a ~placeholder~ we will pass that to input
-- ~multiline-text~ will utilize the =write= functionality from =gum=
+- ~multiline-text~ type elements will utilize the =write= functionality from =gum=
+- ~confirmation~ type elements will utilize the =confirm= functionality from =gum=
+  If a user chooses the negative option the program will exit with an exit code of 1
 
-* Instructions
-instructions text always precedes the field and is not colored.
+* Instructions Text
+~instructions~ text always precedes the field and is not colored.
 * User Hints
-- Hint text should always be displayed in a medium gray.
+- Hint text should always be displayed in a medium gray, after any instructions, and before the element's input mechanism.
 - Whenever we display a ~multiple-select~ provide the following hint ="Use Space to select multiple. Hit Enter to submit."=
 - Whenever we display a ~multiline-text~ provide the following hint ="Ctrl+d to Submit"=
 * Libraries
@@ -79,3 +114,71 @@ instructions text always precedes the field and is not colored.
   local clone of repo: =~/workspace/reference/golang/gum=
 - color
   local clone of repo: =~/workspace/reference/golang/color=
+- go-git
+  local clone of repo: =~/workspace/reference/golang/go-git=
+* Example YAML
+
+#+begin_src yaml
+code-section:
+  destination: title
+  type: select
+  options:
+    - input
+    - git
+    - interface
+    - documentation
+  instructions: Which section of the codebase?
+  modifiable: true
+  before-string: "["
+  after-string: "] "
+change-type:
+  destination: title
+  type: select
+  options:
+    - fix
+    - enhancement
+    - refactoring
+  modifiable: true
+  instructions: What kind of change?
+  after-string: ": "
+commit-title:
+  destination: title
+  type: text
+  placeholder: Commit Title
+commit-description:
+  destination: body
+  type: multiline-text
+  instructions: Please describe your changes.
+  allow-empty: true
+ticket-number:
+  destination: body
+  instructions: Associated Ticket Number (if any)
+  allow-empty: true
+  before-string: "\n\nTicket: "
+  data-type: integer
+tags:
+  destination: body
+  instructions: (optional) add relevant tags
+  type: multiselect
+  record-as: joined-string
+  options:
+    - hotfix
+    - dependencies
+    - tech-debt
+    - refactoring
+  before-string: "\n\nTags: "
+
+#+end_src
+
+After interacting with the inputs generated by that YAML we might end up with a commit message that looks like this
+
+#+begin_src text
+[documentation] enhancement: adding to the spec
+
+Documenting some more of the edge cases we'll have to handle
+so that we make sure to get everything right.
+
+Ticket: 12345
+
+Tags: hotfix, refactoring
+#+end_src
