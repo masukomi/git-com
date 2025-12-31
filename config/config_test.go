@@ -61,7 +61,7 @@ func TestGetBulletString(t *testing.T) {
 	}{
 		{"default value", Element{}, "- "},
 		{"custom value", Element{BulletString: "* "}, "* "},
-		{"empty string uses default", Element{BulletString: ""}, "- "},
+		{"empty string uses default", Element{BulletString: ""}, BulletListPrefix},
 	}
 
 	for _, tt := range tests {
@@ -79,9 +79,9 @@ func TestGetJoinString(t *testing.T) {
 		elem     Element
 		expected string
 	}{
-		{"default value", Element{}, ", "},
+		{"default value", Element{}, JoinSeparator},
 		{"custom value", Element{JoinString: " | "}, " | "},
-		{"empty string uses default", Element{JoinString: ""}, ", "},
+		{"empty string uses default", Element{JoinString: ""}, JoinSeparator},
 	}
 
 	for _, tt := range tests {

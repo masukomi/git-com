@@ -36,6 +36,16 @@ const (
 	RecordAsJoinedString RecordAs = "joined-string"
 )
 
+// Default text that will be used when not provided by the user
+const (
+	// JoinSeparator is the string used to join array elements.
+    JoinSeparator		= ", "
+
+    // BulletListPrefix is the prefix that appears at the start of every
+    // line in a bullet‑point list.
+    BulletListPrefix	= "- "
+)
+
 // Element represents a single YAML element configuration
 type Element struct {
 	Name        string      // The top-level key name (populated during parsing)
@@ -83,7 +93,7 @@ func (e *Element) IsModifiable() bool {
 // GetBulletString returns the bullet string with default
 func (e *Element) GetBulletString() string {
 	if e.BulletString == "" {
-		return "- "
+		return BulletListPrefix
 	}
 	return e.BulletString
 }
@@ -91,7 +101,7 @@ func (e *Element) GetBulletString() string {
 // GetJoinString returns the join string with default
 func (e *Element) GetJoinString() string {
 	if e.JoinString == "" {
-		return ", "
+		return JoinSeparator
 	}
 	return e.JoinString
 }
