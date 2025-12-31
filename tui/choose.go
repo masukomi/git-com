@@ -309,5 +309,5 @@ func (m chooseModel) View() string {
 		parts = append(parts, "", m.help.View(m.keymap))
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, parts…)
+	return lipgloss.JoinVertical(lipgloss.Left, parts...)
 }

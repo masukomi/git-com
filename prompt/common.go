@@ -3,7 +3,9 @@ package prompt
 import (
 	"errors"
 	"fmt"
+	"strings"
 
+	"git-com/config"
 	"git-com/output"
 	"git-com/tui"
 )
@@ -12,6 +14,9 @@ var (
 	// ErrUserAborted indicates the user pressed Ctrl+C or Esc
 	ErrUserAborted = errors.New("user aborted")
 )
+
+// otherOption is the label for the "add new item" option in modifiable selects
+const otherOption = "Other…"
 
 // ClearScreen clears the terminal screen
 func ClearScreen() {
@@ -28,4 +33,33 @@ func DisplayInstructions(text string) {
 // isAbortError checks if the error is an abort error from tui
 func isAbortError(err error) bool {
 	return errors.Is(err, tui.ErrAborted)
+}
+
+// handleOtherSelection handles when user selects "Other…" to add a new item
+func handleOtherSelection(elementName string, cfg *config.Config) (string, error) {
+	ClearScreen()
+	DisplayInstructions("Add & select a new item")
+
+	result, err := tui.Input("Enter new option…")
+	if err != nil {
+		if isAbortError(err) {
+			return "", ErrUserAborted
+		}
+		return "", err
+	}
+
+	newValue := strings.TrimSpace(result)
+	if newValue == "" {
+		return "", ErrUserAborted
+	}
+
+	// Save the new option to the config file
+	if cfg != nil {
+		if err := cfg.AddOptionToElement(elementName, newValue); err != nil {
+			// Log the error but don't fail - the value is still usable
+			output.PrintWarning("Could not save new option to config: " + err.Error())
+		}
+	}
+
+	return newValue, nil
 }

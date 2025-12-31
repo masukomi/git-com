@@ -1,4 +1,5 @@
 code-section:
+    type: select
     after-string: '] '
     before-string: '['
     destination: title
@@ -11,43 +12,44 @@ code-section:
         - documentation
         - core
         - git
-    type: select
+        - configuration
 change-type:
+    type: select
+    modifiable: true
     after-string: ': '
     destination: title
     instructions: What kind of change?
-    modifiable: true
     options:
         - fix
         - enhancement
         - refactoring
-    type: select
 commit-title:
+    type: text
     destination: title
     placeholder: Commit Title
-    type: text
 commit-description:
+    type: multiline-text
     allow-empty: true
     destination: body
     instructions: Please describe your changes.
-    type: multiline-text
 ticket-number:
+    type: text
     allow-empty: true
     before-string: "\n\nTicket: "
     data-type: integer
     destination: body
-    instructions: Associated Ticket Number (if any)
-    type: text
+    instructions: "Associated Ticket Number (if any)"
 tags:
+    type: multi-select
     allow-empty: true
+    modifiable: true
     before-string: "\n\nTags: "
     destination: body
-    instructions: (optional) add relevant tags
+    empty-selection-text: Don't Tag
+    instructions: "(optional) add relevant tags"
     options:
         - hotfix
         - dependencies
         - tech-debt
         - refactoring
     record-as: joined-string
-    type: multi-select
-    empty-selection-text: "Don't Tag"

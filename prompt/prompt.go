@@ -60,7 +60,7 @@ func processElement(elem config.Element, cfg *config.Config) (string, error) {
 	case config.TypeSelect:
 		return HandleSelect(elem, cfg)
 	case config.TypeMultiSelect:
-		return HandleMultiSelect(elem)
+		return HandleMultiSelect(elem, cfg)
 	case config.TypeConfirmation:
 		return HandleConfirmation(elem)
 	default:

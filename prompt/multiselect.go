@@ -9,7 +9,7 @@ import (
 )
 
 // HandleMultiSelect processes a multi-select element
-func HandleMultiSelect(elem config.Element) (string, error) {
+func HandleMultiSelect(elem config.Element, cfg *config.Config) (string, error) {
 	// Determine the empty selection text if allow-empty is true
 	var emptySelectionText string
 	if elem.IsAllowEmpty() {
@@ -21,12 +21,17 @@ func HandleMultiSelect(elem config.Element) (string, error) {
 		DisplayInstructions(elem.Instructions)
 
 		// Build options list
-		options := make([]string, 0, len(elem.Options)+1)
+		options := make([]string, 0, len(elem.Options)+2)
 		if emptySelectionText != "" {
 			// Add empty selection option at the top
 			options = append(options, emptySelectionText)
 		}
-		options = append(options, elem.Options…)
+		options = append(options, elem.Options...)
+
+		// Add "Other…" if modifiable
+		if elem.IsModifiable() {
+			options = append(options, otherOption)
+		}
 
 		// Get selections (limit 0 means no limit, or use elem.Limit)
 		limit := elem.Limit
@@ -47,6 +52,20 @@ func HandleMultiSelect(elem config.Element) (string, error) {
 			return "", nil
 		}
 
+		// Handle "Other…" selection
+		if elem.IsModifiable() && containsOption(selections, otherOption) {
+			newValue, err := handleOtherSelection(elem.Name, cfg)
+			if err != nil {
+				if err == ErrUserAborted {
+					// User cancelled, re-show the multi-select
+					continue
+				}
+				return "", err
+			}
+			// Replace "Other…" with the new value in selections
+			selections = replaceOption(selections, otherOption, newValue)
+		}
+
 		// Check if empty is allowed
 		if len(selections) == 0 && !elem.IsAllowEmpty() {
 			output.PrintWarning("This input is required.")
@@ -59,14 +78,32 @@ func HandleMultiSelect(elem config.Element) (string, error) {
 	}
 }
 
-// containsEmptySelection checks if the empty selection text is in the selections
-func containsEmptySelection(selections []string, emptySelectionText string) bool {
+// containsOption checks if a specific option is in the selections
+func containsOption(selections []string, option string) bool {
 	for _, sel := range selections {
-		if sel == emptySelectionText {
+		if sel == option {
 			return true
 		}
 	}
 	return false
+}
+
+// containsEmptySelection checks if the empty selection text is in the selections
+func containsEmptySelection(selections []string, emptySelectionText string) bool {
+	return containsOption(selections, emptySelectionText)
+}
+
+// replaceOption replaces an option in selections with a new value
+func replaceOption(selections []string, oldOption, newValue string) []string {
+	result := make([]string, 0, len(selections))
+	for _, sel := range selections {
+		if sel == oldOption {
+			result = append(result, newValue)
+		} else {
+			result = append(result, sel)
+		}
+	}
+	return result
 }
 
 // formatMultiSelectResult formats the selected items based on record-as setting
