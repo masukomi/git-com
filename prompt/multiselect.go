@@ -10,10 +10,10 @@ import (
 
 // HandleMultiSelect processes a multi-select element
 func HandleMultiSelect(elem config.Element, cfg *config.Config) (string, error) {
-	// Determine the empty selection text if allow-empty is true
+	// Determine the empty selection text if allow-empty is true (italicized for display)
 	var emptySelectionText string
 	if elem.IsAllowEmpty() {
-		emptySelectionText = elem.GetEmptySelectionText()
+		emptySelectionText = Italicize(elem.GetEmptySelectionText())
 	}
 
 	for {

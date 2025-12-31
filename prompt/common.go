@@ -8,15 +8,25 @@ import (
 	"git-com/config"
 	"git-com/output"
 	"git-com/tui"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 var (
 	// ErrUserAborted indicates the user pressed Ctrl+C or Esc
 	ErrUserAborted = errors.New("user aborted")
+
+	// italicStyle is used for special options like "Other…" and empty selection text
+	italicStyle = lipgloss.NewStyle().Italic(true)
 )
 
-// otherOption is the label for the "add new item" option in modifiable selects
-const otherOption = "Other…"
+// otherOption is the styled label for the "add new item" option in modifiable selects
+var otherOption = italicStyle.Render("Other…")
+
+// Italicize applies italic styling to text (used for special list options)
+func Italicize(text string) string {
+	return italicStyle.Render(text)
+}
 
 // ClearScreen clears the terminal screen
 func ClearScreen() {
