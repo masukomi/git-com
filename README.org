@@ -220,6 +220,44 @@ A multiple-choice selection from a list of options. Use =Space= to select items 
 | =empty-selection-text= | Label for the "skip" option (requires =allow-empty: true=) | ="No Selection"= |
 
 If modifiable is set to =true=, an "Other…" element will be added to the list and - if chosen - will allow the user to add a new element which will then be saved into their =.git-com.y[a]ml= file for future use.
+
+***** empty-selection-text
+It's not currently possible to /not/ select something in a =multi-select=, but sometimes you want the =multi-select= to be optional (=allow-empty: true=). We work around that limitation by adding a meta-element that - when chosen - tells the system that the user is choosing to /not/ choose.
+
+By default, an optional =multi-select= will have a /No Selection/ option added to the top of the list. Setting =empty-selection-text= will override that default text with whatever string you provide.
+***** bullet-string
+Setting =bullet-string= changes what's displayed before each line of a list of items chosen in a =multi-select=
+
+This is (optionally) used when =record-as= is set to =list=
+
+Default example:
+
+#+begin_src text
+- foo
+- bar
+#+end_src
+
+Setting =bullet-string= to ="• "= would give you this in your commit message
+
+#+begin_src text
+• foo
+• bar
+#+end_src
+***** join-string
+⚠️ note this is =join-string= not =joined-string=
+
+Same idea as =bullet-string= but used when =record-as= is (optionally) set to =joined-string=
+
+#+begin_src text
+foo, bar, baz
+#+end_src
+
+Setting =join-string= to =" / "= would give you this in your commit message
+
+#+begin_src text
+foo / bar / baz
+#+end_src
+
 **** Example
 #+begin_src yaml
 tags:
