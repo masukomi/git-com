@@ -1,0 +1,52 @@
+code-section:
+    after-string: '] '
+    before-string: '['
+    destination: title
+    instructions: Which section of the codebase?
+    modifiable: true
+    options:
+        - input
+        - git
+        - interface
+        - documentation
+        - core
+        - git
+    type: select
+change-type:
+    after-string: ': '
+    destination: title
+    instructions: What kind of change?
+    modifiable: true
+    options:
+        - fix
+        - enhancement
+        - refactoring
+    type: select
+commit-title:
+    destination: title
+    placeholder: Commit Title
+    type: text
+commit-description:
+    allow-empty: true
+    destination: body
+    instructions: Please describe your changes.
+    type: multiline-text
+ticket-number:
+    allow-empty: true
+    before-string: "\n\nTicket: "
+    data-type: integer
+    destination: body
+    instructions: Associated Ticket Number (if any)
+    type: text
+tags:
+    allow-empty: true
+    before-string: "\n\nTags: "
+    destination: body
+    instructions: (optional) add relevant tags
+    options:
+        - hotfix
+        - dependencies
+        - tech-debt
+        - refactoring
+    record-as: joined-string
+    type: multi-select
