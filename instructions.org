@@ -1,0 +1,81 @@
+#+title: Instructions
+
+We're creating a cli tool to help users create consistent commit messages for git. The tool will provide users with
+- list options for common elements
+- text input for the description
+- confirmation
+- the option add to lists of common elements
+
+Which options we provide to the users, and what order we provide them in will be controlled via a project specific YAML file.
+
+* Section Attributes
+
+- required
+  - ~destination~ one of the following
+    - ~title~
+    - ~body~
+  - ~type~ one of the following:
+    - ~text~
+    - ~multiline-text~
+    - ~select~
+    - ~multi-select~
+    - ~confirmation~
+- optional
+  - ~before-string~: a string
+  - ~after-string~: a string
+
+* Attribute Details
+associated data for each type
+
+~select~
+- ~options~
+  - a list of values to select from
+- (optional) ~modifiable~ one of:
+  - ~true~
+  - ~false~
+
+~multi-select~
+- (optional) ~bullet-string~: any string
+- (optional) ~join-string~: any string
+- (optional) ~limit~: an integer
+- ~record-as~ one of:
+  - ~list~
+  - ~joined-string~
+- ~options~
+  - a list of values to select from
+
+~text~
+- (optional) ~max-length~: an integer
+- (optional) ~placeholder~: a string
+
+~confirmation~
+- ~confirmed-string~: any string
+- ~rejected-string~: any string
+
+
+
+* Implementation
+It will leverage the =gum= library from Charm (see below) to facilitate easy input of recurring elements.
+It will leverage the =color= library to facilitate the coloring of text.
+
+- ~select~ will utilize the =choose= functionality from =gum= with a =limit= of 1
+  If the user's YAML specifies that it is ~modifiable~ add an ="Other…"= option to the end of the list.
+  If the user chooses ="Other…"= we should
+  - display a ~text~ input with
+- ~multiple-select~ will utilize the =choose= functionality from =gum=
+  If the user's YAML specifies a limit we will use it. If it does not we will specify =no-limit=
+- ~text~ will utilize the =input= functionality from =gum=
+  If the user's YAML specifies a ~placeholder~ we will pass that to input
+- ~multiline-text~ will utilize the =write= functionality from =gum=
+
+* Instructions
+instructions text always precedes the field and is not colored.
+* User Hints
+- Hint text should always be displayed in a medium gray.
+- Whenever we display a ~multiple-select~ provide the following hint ="Use Space to select multiple. Hit Enter to submit."=
+- Whenever we display a ~multiline-text~ provide the following hint ="Ctrl+d to Submit"=
+* Libraries
+- gum
+  local clone of repo: =~/workspace/reference/golang/gum=
+- color
+  local clone of repo: =~/workspace/reference/golang/color=
