@@ -15,7 +15,7 @@ func HandleMultilineText(elem config.Element) (string, error) {
 		DisplayInstructions(elem.Instructions)
 
 		// Get multiline text input
-		result, err := tui.Write("Write something...")
+		result, err := tui.Write("Write something…")
 		if err != nil {
 			if isAbortError(err) {
 				return "", ErrUserAborted

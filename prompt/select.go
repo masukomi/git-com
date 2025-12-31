@@ -8,7 +8,7 @@ import (
 	"git-com/tui"
 )
 
-const otherOption = "Other..."
+const otherOption = "Other…"
 
 // HandleSelect processes a select element
 func HandleSelect(elem config.Element, cfg *config.Config) (string, error) {
@@ -20,7 +20,7 @@ func HandleSelect(elem config.Element, cfg *config.Config) (string, error) {
 		options := make([]string, len(elem.Options))
 		copy(options, elem.Options)
 
-		// Add "Other..." if modifiable
+		// Add "Other…" if modifiable
 		if elem.IsModifiable() {
 			options = append(options, otherOption)
 		}
@@ -39,7 +39,7 @@ func HandleSelect(elem config.Element, cfg *config.Config) (string, error) {
 			result = selected[0]
 		}
 
-		// Handle "Other..." selection
+		// Handle "Other…" selection
 		if result == otherOption {
 			newValue, err := handleOtherSelection(elem.Name, cfg)
 			if err != nil {
@@ -62,12 +62,12 @@ func HandleSelect(elem config.Element, cfg *config.Config) (string, error) {
 	}
 }
 
-// handleOtherSelection handles when user selects "Other..." to add a new item
+// handleOtherSelection handles when user selects "Other…" to add a new item
 func handleOtherSelection(elementName string, cfg *config.Config) (string, error) {
 	ClearScreen()
 	DisplayInstructions("Add & select a new item")
 
-	result, err := tui.Input("Enter new option...")
+	result, err := tui.Input("Enter new option…")
 	if err != nil {
 		if isAbortError(err) {
 			return "", ErrUserAborted

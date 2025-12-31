@@ -26,7 +26,7 @@ func HandleMultiSelect(elem config.Element) (string, error) {
 			// Add empty selection option at the top
 			options = append(options, emptySelectionText)
 		}
-		options = append(options, elem.Options...)
+		options = append(options, elem.Options…)
 
 		// Get selections (limit 0 means no limit, or use elem.Limit)
 		limit := elem.Limit
