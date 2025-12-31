@@ -1,0 +1,20 @@
+#+title: TUI Readme
+* So Much Code…
+If you're wondering why there's so much code here when we're just doing the same stuff as Charm's [[https://github.com/charmbracelet/gum][gum]] library…
+
+=gum= is a CLI tool, not a library. It's designed to be run as a subprocess (=gum= choose foo bar), not imported as a Go package. You can't do =gum=.Choose(options) in your code.
+
+* What gum is built on:
+- [[https://github.com/charmbracelet/bubbletea][bubbletea]] - The TUI framework (Model-Update-View pattern)
+- [[https://github.com/charmbracelet/bubbles][bubbles]] - Pre-built components (textinput, textarea, paginator, etc.)
+
+** The problem
+=bubbles= provides building blocks, not complete widgets. For example:
+- ~bubbles/textinput~ gives you a text field component - we use this, which is why =tui/input.go= is relatively simple
+- ~bubbles/textarea~ gives you a multiline editor - same, =tui/write.go= is simpler
+
+But there's no ~bubbles/choose~ component. The multi-select list with cursor movement, toggle selection, pagination, and keybindings? That's all custom code that =gum= implements internally. When we stopped shelling out to the gum CLI, we had to reimplement that logic ourselves.
+
+If =bubbles= had a ready-made selection list component, =tui/choose.go= would be ~30 lines instead of ~300.
+
+tl;dr: We're not wrapping gum's packages - we're reimplementing what gum does internally because gum isn't designed to be used as a library.
