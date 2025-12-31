@@ -9,9 +9,6 @@ import (
 // HandleSelect processes a select element
 func HandleSelect(elem config.Element, cfg *config.Config) (string, error) {
 	for {
-		// Display instructions if present
-		DisplayInstructions(elem.Instructions)
-
 		// Build options list
 		options := make([]string, len(elem.Options))
 		copy(options, elem.Options)
@@ -22,7 +19,7 @@ func HandleSelect(elem config.Element, cfg *config.Config) (string, error) {
 		}
 
 		// Get selection (limit 1 for single select)
-		selected, err := tui.Choose(options, 1)
+		selected, err := tui.Choose(options, 1, elem.Instructions)
 		if err != nil {
 			if isAbortError(err) {
 				return "", ErrUserAborted

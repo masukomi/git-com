@@ -17,11 +17,8 @@ var (
 // HandleText processes a text input element
 func HandleText(elem config.Element) (string, error) {
 	for {
-		// Display instructions if present
-		DisplayInstructions(elem.Instructions)
-
 		// Get text input
-		result, err := tui.Input(elem.Placeholder)
+		result, err := tui.Input(elem.Placeholder, elem.Instructions)
 		if err != nil {
 			if isAbortError(err) {
 				return "", ErrUserAborted

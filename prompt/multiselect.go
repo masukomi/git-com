@@ -17,9 +17,6 @@ func HandleMultiSelect(elem config.Element, cfg *config.Config) (string, error) 
 	}
 
 	for {
-		// Display instructions if present
-		DisplayInstructions(elem.Instructions)
-
 		// Build options list
 		options := make([]string, 0, len(elem.Options)+2)
 		if emptySelectionText != "" {
@@ -38,7 +35,7 @@ func HandleMultiSelect(elem config.Element, cfg *config.Config) (string, error) 
 		if limit == 0 {
 			limit = -1 // No limit in our tui.Choose
 		}
-		selections, err := tui.Choose(options, limit)
+		selections, err := tui.Choose(options, limit, elem.Instructions)
 		if err != nil {
 			if isAbortError(err) {
 				return "", ErrUserAborted

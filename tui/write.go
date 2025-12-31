@@ -11,7 +11,7 @@ import (
 )
 
 // Write displays an interactive multiline text input and returns the entered text
-func Write(placeholder string) (string, error) {
+func Write(placeholder string, instructions string) (string, error) {
 	ta := textarea.New()
 	ta.Placeholder = placeholder
 	ta.Focus()
@@ -25,6 +25,7 @@ func Write(placeholder string) (string, error) {
 	m := writeModel{
 		textarea:  ta,
 		autoWidth: true,
+		header:    instructions,
 		showHelp:  true,
 		help:      help.New(),
 		keymap:    km,

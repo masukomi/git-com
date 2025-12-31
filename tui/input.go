@@ -11,7 +11,7 @@ import (
 )
 
 // Input displays an interactive text input and returns the entered text
-func Input(placeholder string) (string, error) {
+func Input(placeholder string, instructions string) (string, error) {
 	ti := textinput.New()
 	ti.Placeholder = placeholder
 	ti.Focus()
@@ -21,6 +21,7 @@ func Input(placeholder string) (string, error) {
 	m := inputModel{
 		textinput: ti,
 		autoWidth: true,
+		header:    instructions,
 		showHelp:  true,
 		help:      help.New(),
 		keymap:    inputDefaultKeymap(),

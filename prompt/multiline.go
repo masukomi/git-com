@@ -11,11 +11,8 @@ import (
 // HandleMultilineText processes a multiline text input element
 func HandleMultilineText(elem config.Element) (string, error) {
 	for {
-		// Display instructions if present
-		DisplayInstructions(elem.Instructions)
-
 		// Get multiline text input
-		result, err := tui.Write("Write something…")
+		result, err := tui.Write("Write something…", elem.Instructions)
 		if err != nil {
 			if isAbortError(err) {
 				return "", ErrUserAborted

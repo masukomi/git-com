@@ -23,13 +23,6 @@ func ClearScreen() {
 	fmt.Print("\033[H\033[2J")
 }
 
-// DisplayInstructions prints instructions text without coloring
-func DisplayInstructions(text string) {
-	if text != "" {
-		output.Print(text)
-	}
-}
-
 // isAbortError checks if the error is an abort error from tui
 func isAbortError(err error) bool {
 	return errors.Is(err, tui.ErrAborted)
@@ -37,10 +30,7 @@ func isAbortError(err error) bool {
 
 // handleOtherSelection handles when user selects "Other…" to add a new item
 func handleOtherSelection(elementName string, cfg *config.Config) (string, error) {
-	ClearScreen()
-	DisplayInstructions("Add & select a new item")
-
-	result, err := tui.Input("Enter new option…")
+	result, err := tui.Input("Enter new option…", "Add & select a new item")
 	if err != nil {
 		if isAbortError(err) {
 			return "", ErrUserAborted

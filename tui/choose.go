@@ -16,7 +16,7 @@ import (
 var ErrAborted = errors.New("user aborted")
 
 // Choose displays an interactive selection list and returns the selected items
-func Choose(options []string, limit int) ([]string, error) {
+func Choose(options []string, limit int, instructions string) ([]string, error) {
 	if len(options) == 0 {
 		return nil, errors.New("no options provided")
 	}
@@ -67,6 +67,7 @@ func Choose(options []string, limit int) ([]string, error) {
 		selectedPrefix:   selectedPrefix,
 		unselectedPrefix: unselectedPrefix,
 		cursorPrefix:     cursorPrefix,
+		header:           instructions,
 		items:            items,
 		limit:            limit,
 		paginator:        p,
