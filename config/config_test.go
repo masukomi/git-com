@@ -213,6 +213,45 @@ commit-title:
 	})
 }
 
+func TestConfigFileNames(t *testing.T) {
+	// Verify both .yaml and .yml extensions are supported
+	if len(configFileNames) != 2 {
+		t.Errorf("expected 2 config file names, got %d", len(configFileNames))
+	}
+	if configFileNames[0] != ".git-com.yaml" {
+		t.Errorf("expected first config file name '.git-com.yaml', got %q", configFileNames[0])
+	}
+	if configFileNames[1] != ".git-com.yml" {
+		t.Errorf("expected second config file name '.git-com.yml', got %q", configFileNames[1])
+	}
+}
+
+func TestLoadConfigFromPath_YmlExtension(t *testing.T) {
+	// Verify .yml files can be loaded via LoadConfigFromPath
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, ".git-com.yml")
+
+	yaml := `title:
+  destination: title
+  type: text
+`
+	if err := os.WriteFile(configPath, []byte(yaml), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := LoadConfigFromPath(configPath)
+	if err != nil {
+		t.Fatalf("LoadConfigFromPath() error = %v", err)
+	}
+
+	if len(cfg.Elements) != 1 {
+		t.Errorf("expected 1 element, got %d", len(cfg.Elements))
+	}
+	if cfg.Elements[0].Name != "title" {
+		t.Errorf("expected element name 'title', got %q", cfg.Elements[0].Name)
+	}
+}
+
 func TestParseOrderedYAML(t *testing.T) {
 	t.Run("preserves order", func(t *testing.T) {
 		yaml := `first:

@@ -19,13 +19,13 @@ func ValidateConfig(cfg *Config) bool {
 			hasTitleElement = true
 		}
 		if err := validateElement(elem); err != nil {
-			output.PrintError(fmt.Sprintf("\"%s\" was not configured correctly in .git-com.yaml", elem.Name))
+			output.PrintError(fmt.Sprintf("\"%s\" was not configured correctly in .git-com.y[a]ml", elem.Name))
 			valid = false
 		}
 	}
 
 	if !hasTitleElement {
-		output.PrintError("At least one element in .git-com.yaml must have destination: title")
+		output.PrintError("At least one element in .git-com.y[a]ml must have destination: title")
 		valid = false
 	}
 

@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const configFileName = ".git-com.yaml"
+var configFileNames = []string{".git-com.yaml", ".git-com.yml"}
 
 var (
 	ErrConfigNotFound = errors.New("config file not found")
@@ -18,14 +18,25 @@ var (
 )
 
 // LoadConfig loads the configuration from the git repository root
+// It checks for both .git-com.yaml and .git-com.yml, preferring .yaml
 func LoadConfig() (*Config, error) {
 	gitRoot, err := findGitRoot()
 	if err != nil {
 		return nil, err
 	}
 
-	configPath := filepath.Join(gitRoot, configFileName)
-	return LoadConfigFromPath(configPath)
+	for _, fileName := range configFileNames {
+		configPath := filepath.Join(gitRoot, fileName)
+		cfg, err := LoadConfigFromPath(configPath)
+		if err == nil {
+			return cfg, nil
+		}
+		if err != ErrConfigNotFound {
+			return nil, err
+		}
+	}
+
+	return nil, ErrConfigNotFound
 }
 
 // LoadConfigFromPath loads the configuration from a specific path
