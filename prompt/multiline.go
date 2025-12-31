@@ -14,9 +14,6 @@ func HandleMultilineText(elem config.Element) (string, error) {
 		// Display instructions if present
 		DisplayInstructions(elem.Instructions)
 
-		// Display hint for multiline input
-		DisplayHint("Ctrl+d to submit.")
-
 		// Get multiline text input
 		result, err := tui.Write("Write something...")
 		if err != nil {

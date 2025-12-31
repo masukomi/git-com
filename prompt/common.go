@@ -25,13 +25,6 @@ func DisplayInstructions(text string) {
 	}
 }
 
-// DisplayHint prints hint text in gray
-func DisplayHint(text string) {
-	if text != "" {
-		output.PrintHint(text)
-	}
-}
-
 // isAbortError checks if the error is an abort error from tui
 func isAbortError(err error) bool {
 	return errors.Is(err, tui.ErrAborted)

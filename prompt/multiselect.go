@@ -20,9 +20,6 @@ func HandleMultiSelect(elem config.Element) (string, error) {
 		// Display instructions if present
 		DisplayInstructions(elem.Instructions)
 
-		// Display hint for multi-select
-		DisplayHint("Use Space to select multiple. Hit Enter to submit.")
-
 		// Build options list
 		options := make([]string, 0, len(elem.Options)+1)
 		if emptySelectionText != "" {
