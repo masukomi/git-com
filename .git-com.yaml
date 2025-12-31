@@ -5,16 +5,14 @@ code-section:
     instructions: Which section of the codebase?
     modifiable: true
     options:
-        - input
-        - git
-        - interface
-        - documentation
         - core
         - git
+        - validation
+        - interface
+        - documentation
         - configuration
         - meta
         - tests
-        - validation
     type: select
 change-type:
     after-string: ': '
@@ -22,9 +20,10 @@ change-type:
     instructions: What kind of change?
     modifiable: true
     options:
-        - fix
         - enhancement
         - refactoring
+        - fix
+        - cleanup
     type: select
 commit-title:
     destination: title
@@ -50,11 +49,12 @@ tags:
     instructions: (optional) add relevant tags
     modifiable: true
     options:
-        - hotfix
-        - dependencies
         - tech-debt
-        - refactoring
         - testing
         - quality-of-life
+        - maintainability
+        - dependencies
+        - refactoring
+        - hotfix
     record-as: joined-string
     type: multi-select
