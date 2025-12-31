@@ -223,6 +223,26 @@ func TestValidateElement(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "multi-select title destination with record-as list is invalid",
+			elem: Element{
+				Destination: DestTitle,
+				Type:        TypeMultiSelect,
+				Options:     []string{"a", "b"},
+				RecordAs:    RecordAsList,
+			},
+			wantErr: true,
+		},
+		{
+			name: "multi-select title destination with record-as joined-string is valid",
+			elem: Element{
+				Destination: DestTitle,
+				Type:        TypeMultiSelect,
+				Options:     []string{"a", "b"},
+				RecordAs:    RecordAsJoinedString,
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -422,6 +442,33 @@ func TestValidateMultiSelectElement(t *testing.T) {
 				Options:    []string{"a", "b"},
 				RecordAs:   RecordAsList,
 				AllowEmpty: boolPtr(true),
+			},
+			wantErr: false,
+		},
+		{
+			name: "title destination with record-as list is invalid",
+			elem: Element{
+				Destination: DestTitle,
+				Options:     []string{"a", "b"},
+				RecordAs:    RecordAsList,
+			},
+			wantErr: true,
+		},
+		{
+			name: "title destination with record-as joined-string is valid",
+			elem: Element{
+				Destination: DestTitle,
+				Options:     []string{"a", "b"},
+				RecordAs:    RecordAsJoinedString,
+			},
+			wantErr: false,
+		},
+		{
+			name: "body destination with record-as list is valid",
+			elem: Element{
+				Destination: DestBody,
+				Options:     []string{"a", "b"},
+				RecordAs:    RecordAsList,
 			},
 			wantErr: false,
 		},

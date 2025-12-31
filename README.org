@@ -210,6 +210,10 @@ A multiple-choice selection from a list of options. Use =Space= to select items 
 - =options= - List of choices
 - =record-as= - Output format: =list= or =joined-string=
 
+*Note:* It is generally /not/ a good idea to use a =multi-select= if you're adding its output to the title of your git commit.
+
+When =destination= is =title=, =record-as= must be =joined-string=. The =list= format contains newlines which are not allowed in commit titles.
+
 **** Optional Attributes
 | Attribute              | Description                                                | Default          |
 |------------------------+------------------------------------------------------------+------------------|

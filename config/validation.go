@@ -110,6 +110,10 @@ func validateMultiSelectElement(elem Element) error {
 	if elem.RecordAs != RecordAsList && elem.RecordAs != RecordAsJoinedString {
 		return fmt.Errorf("invalid record-as: %s", elem.RecordAs)
 	}
+	// Title destination requires joined-string (list would have newlines)
+	if elem.Destination == DestTitle && elem.RecordAs == RecordAsList {
+		return fmt.Errorf("multi-select with destination title must use record-as: joined-string")
+	}
 	// Cannot define empty-selection-text if allow-empty is false or not present
 	if elem.HasEmptySelectionText() && !elem.IsAllowEmpty() {
 		return fmt.Errorf("cannot define empty-selection-text when allow-empty is false or not set")
