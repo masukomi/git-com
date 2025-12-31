@@ -57,10 +57,11 @@ type Element struct {
 	Modifiable *bool    `yaml:"modifiable,omitempty"`
 
 	// Multi-select specific attributes
-	RecordAs     RecordAs `yaml:"record-as,omitempty"`
-	BulletString string   `yaml:"bullet-string,omitempty"`
-	JoinString   string   `yaml:"join-string,omitempty"`
-	Limit        int      `yaml:"limit,omitempty"`
+	RecordAs           RecordAs `yaml:"record-as,omitempty"`
+	BulletString       string   `yaml:"bullet-string,omitempty"`
+	JoinString         string   `yaml:"join-string,omitempty"`
+	Limit              int      `yaml:"limit,omitempty"`
+	EmptySelectionText string   `yaml:"empty-selection-text,omitempty"`
 }
 
 // Config holds the ordered list of elements parsed from YAML
@@ -93,4 +94,17 @@ func (e *Element) GetJoinString() string {
 		return ", "
 	}
 	return e.JoinString
+}
+
+// GetEmptySelectionText returns the empty selection text with default
+func (e *Element) GetEmptySelectionText() string {
+	if e.EmptySelectionText == "" {
+		return "No Selection"
+	}
+	return e.EmptySelectionText
+}
+
+// HasEmptySelectionText returns true if empty-selection-text was explicitly set
+func (e *Element) HasEmptySelectionText() bool {
+	return e.EmptySelectionText != ""
 }

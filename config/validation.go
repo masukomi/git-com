@@ -88,6 +88,10 @@ func validateMultiSelectElement(elem Element) error {
 	if elem.RecordAs != RecordAsList && elem.RecordAs != RecordAsJoinedString {
 		return fmt.Errorf("invalid record-as: %s", elem.RecordAs)
 	}
+	// Cannot define empty-selection-text if allow-empty is false or not present
+	if elem.HasEmptySelectionText() && !elem.IsAllowEmpty() {
+		return fmt.Errorf("cannot define empty-selection-text when allow-empty is false or not set")
+	}
 	return nil
 }
 

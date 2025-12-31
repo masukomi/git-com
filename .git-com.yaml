@@ -50,3 +50,4 @@ tags:
         - refactoring
     record-as: joined-string
     type: multi-select
+    empty-selection-text: "Don't Tag"

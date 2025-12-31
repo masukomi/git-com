@@ -179,6 +179,9 @@ func elementToMap(elem Element) map[string]interface{} {
 	if elem.Limit != 0 {
 		m["limit"] = elem.Limit
 	}
+	if elem.EmptySelectionText != "" {
+		m["empty-selection-text"] = elem.EmptySelectionText
+	}
 
 	return m
 }

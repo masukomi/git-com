@@ -10,6 +10,12 @@ import (
 
 // HandleMultiSelect processes a multi-select element
 func HandleMultiSelect(elem config.Element) (string, error) {
+	// Determine the empty selection text if allow-empty is true
+	var emptySelectionText string
+	if elem.IsAllowEmpty() {
+		emptySelectionText = elem.GetEmptySelectionText()
+	}
+
 	for {
 		// Display instructions if present
 		DisplayInstructions(elem.Instructions)
@@ -17,13 +23,27 @@ func HandleMultiSelect(elem config.Element) (string, error) {
 		// Display hint for multi-select
 		DisplayHint("Use Space to select multiple. Hit Enter to submit.")
 
+		// Build options list
+		options := make([]string, 0, len(elem.Options)+1)
+		if emptySelectionText != "" {
+			// Add empty selection option at the top
+			options = append(options, emptySelectionText)
+		}
+		options = append(options, elem.Options...)
+
 		// Get selections
-		selections, err := runMultiSelect(elem.Options, elem.Limit)
+		selections, err := runMultiSelect(options, elem.Limit)
 		if err != nil {
 			if err == ErrUserAborted {
 				return "", ErrUserAborted
 			}
 			return "", err
+		}
+
+		// Check if user selected the empty selection option
+		if emptySelectionText != "" && containsEmptySelection(selections, emptySelectionText) {
+			// Treat as empty response
+			return "", nil
 		}
 
 		// Check if empty is allowed
@@ -36,6 +56,16 @@ func HandleMultiSelect(elem config.Element) (string, error) {
 		result := formatMultiSelectResult(selections, elem)
 		return result, nil
 	}
+}
+
+// containsEmptySelection checks if the empty selection text is in the selections
+func containsEmptySelection(selections []string, emptySelectionText string) bool {
+	for _, sel := range selections {
+		if sel == emptySelectionText {
+			return true
+		}
+	}
+	return false
 }
 
 // runMultiSelect runs gum choose with multi-select and returns the results
