@@ -5,6 +5,7 @@ import (
 
 	"git-com/config"
 	"git-com/output"
+	"git-com/tui"
 )
 
 // HandleMultilineText processes a multiline text input element
@@ -14,12 +15,12 @@ func HandleMultilineText(elem config.Element) (string, error) {
 		DisplayInstructions(elem.Instructions)
 
 		// Display hint for multiline input
-		DisplayHint("Ctrl+d to Submit")
+		DisplayHint("Ctrl+d to submit.")
 
 		// Get multiline text input
-		result, err := runMultilineInput()
+		result, err := tui.Write("Write something...")
 		if err != nil {
-			if err == ErrUserAborted {
+			if isAbortError(err) {
 				return "", ErrUserAborted
 			}
 			return "", err
@@ -36,9 +37,4 @@ func HandleMultilineText(elem config.Element) (string, error) {
 
 		return result, nil
 	}
-}
-
-// runMultilineInput runs gum write and returns the result
-func runMultilineInput() (string, error) {
-	return runGumCommand("write", "--placeholder", "Write something...")
 }

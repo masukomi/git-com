@@ -15,12 +15,6 @@ func main() {
 }
 
 func run() int {
-	// Check if gum is installed
-	if err := prompt.CheckGumInstalled(); err != nil {
-		output.PrintError(err.Error())
-		return 1
-	}
-
 	// Load configuration from git root
 	cfg, err := config.LoadConfig()
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 
 	"git-com/config"
 	"git-com/output"
+	"git-com/tui"
 )
 
 const otherOption = "Other..."
@@ -24,16 +25,19 @@ func HandleSelect(elem config.Element, cfg *config.Config) (string, error) {
 			options = append(options, otherOption)
 		}
 
-		// Get selection
-		result, err := runSelect(options)
+		// Get selection (limit 1 for single select)
+		selected, err := tui.Choose(options, 1)
 		if err != nil {
-			if err == ErrUserAborted {
+			if isAbortError(err) {
 				return "", ErrUserAborted
 			}
 			return "", err
 		}
 
-		result = strings.TrimSpace(result)
+		var result string
+		if len(selected) > 0 {
+			result = selected[0]
+		}
 
 		// Handle "Other..." selection
 		if result == otherOption {
@@ -58,20 +62,16 @@ func HandleSelect(elem config.Element, cfg *config.Config) (string, error) {
 	}
 }
 
-// runSelect runs gum choose with limit 1 and returns the result
-func runSelect(options []string) (string, error) {
-	args := []string{"choose", "--limit", "1"}
-	args = append(args, options...)
-	return runGumCommand(args...)
-}
-
 // handleOtherSelection handles when user selects "Other..." to add a new item
 func handleOtherSelection(elementName string, cfg *config.Config) (string, error) {
 	ClearScreen()
 	DisplayInstructions("Add & select a new item")
 
-	result, err := runGumCommand("input", "--placeholder", "Enter new option...")
+	result, err := tui.Input("Enter new option...")
 	if err != nil {
+		if isAbortError(err) {
+			return "", ErrUserAborted
+		}
 		return "", err
 	}
 

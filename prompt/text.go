@@ -6,6 +6,7 @@ import (
 
 	"git-com/config"
 	"git-com/output"
+	"git-com/tui"
 )
 
 var (
@@ -20,9 +21,9 @@ func HandleText(elem config.Element) (string, error) {
 		DisplayInstructions(elem.Instructions)
 
 		// Get text input
-		result, err := runTextInput(elem.Placeholder)
+		result, err := tui.Input(elem.Placeholder)
 		if err != nil {
-			if err == ErrUserAborted {
+			if isAbortError(err) {
 				return "", ErrUserAborted
 			}
 			return "", err
@@ -47,15 +48,6 @@ func HandleText(elem config.Element) (string, error) {
 
 		return result, nil
 	}
-}
-
-// runTextInput runs gum input and returns the result
-func runTextInput(placeholder string) (string, error) {
-	args := []string{"input"}
-	if placeholder != "" {
-		args = append(args, "--placeholder", placeholder)
-	}
-	return runGumCommand(args...)
 }
 
 // validateDataType validates input against the specified data type

@@ -1,11 +1,11 @@
 package prompt
 
 import (
-	"strconv"
 	"strings"
 
 	"git-com/config"
 	"git-com/output"
+	"git-com/tui"
 )
 
 // HandleMultiSelect processes a multi-select element
@@ -31,10 +31,14 @@ func HandleMultiSelect(elem config.Element) (string, error) {
 		}
 		options = append(options, elem.Options...)
 
-		// Get selections
-		selections, err := runMultiSelect(options, elem.Limit)
+		// Get selections (limit 0 means no limit, or use elem.Limit)
+		limit := elem.Limit
+		if limit == 0 {
+			limit = -1 // No limit in our tui.Choose
+		}
+		selections, err := tui.Choose(options, limit)
 		if err != nil {
-			if err == ErrUserAborted {
+			if isAbortError(err) {
 				return "", ErrUserAborted
 			}
 			return "", err
@@ -66,31 +70,6 @@ func containsEmptySelection(selections []string, emptySelectionText string) bool
 		}
 	}
 	return false
-}
-
-// runMultiSelect runs gum choose with multi-select and returns the results
-func runMultiSelect(options []string, limit int) ([]string, error) {
-	args := []string{"choose"}
-
-	if limit > 0 {
-		args = append(args, "--limit", strconv.Itoa(limit))
-	} else {
-		args = append(args, "--no-limit")
-	}
-
-	args = append(args, options...)
-
-	result, err := runGumCommand(args...)
-	if err != nil {
-		return nil, err
-	}
-
-	if result == "" {
-		return nil, nil
-	}
-
-	// Split by newline (gum's default output delimiter)
-	return strings.Split(result, "\n"), nil
 }
 
 // formatMultiSelectResult formats the selected items based on record-as setting

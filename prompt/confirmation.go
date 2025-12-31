@@ -2,6 +2,7 @@ package prompt
 
 import (
 	"git-com/config"
+	"git-com/tui"
 )
 
 // HandleConfirmation processes a confirmation element
@@ -15,9 +16,15 @@ func HandleConfirmation(elem config.Element) (string, error) {
 		prompt = elem.Instructions
 	}
 
-	_, err := runGumCommand("confirm", prompt)
+	confirmed, err := tui.Confirm(prompt)
 	if err != nil {
-		// confirm returns exit code 1 for "No" selection
+		if isAbortError(err) {
+			return "", ErrUserAborted
+		}
+		return "", err
+	}
+
+	if !confirmed {
 		return "", ErrUserAborted
 	}
 
