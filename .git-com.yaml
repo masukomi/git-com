@@ -56,5 +56,6 @@ tags:
         - dependencies
         - refactoring
         - hotfix
+        - guard-rails
     record-as: joined-string
     type: multi-select
