@@ -2,12 +2,14 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	"git-com/commit"
 	"git-com/config"
 	"git-com/output"
 	"git-com/prompt"
+	"git-com/tui"
 )
 
 func main() {
@@ -55,8 +57,27 @@ func run() int {
 		return 1
 	}
 
-	// Clear screen before commit
+	// Clear screen and show commit preview
 	prompt.ClearScreen()
+	fmt.Fprintln(os.Stderr, result.Title)
+	if result.Body != "" {
+		fmt.Fprintln(os.Stderr)
+		fmt.Fprintln(os.Stderr, result.Body)
+	}
+	fmt.Fprintln(os.Stderr)
+
+	// Confirm with user
+	confirmed, err := tui.Confirm("Is this good?")
+	if err != nil {
+		if errors.Is(err, tui.ErrAborted) {
+			return 1
+		}
+		output.PrintError("Error during confirmation: " + err.Error())
+		return 1
+	}
+	if !confirmed {
+		return 0
+	}
 
 	// Create the commit
 	if err := commit.CreateCommit(result.Title, result.Body); err != nil {
