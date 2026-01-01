@@ -121,12 +121,13 @@ func formatMultiSelectResult(selections []string, elem config.Element) string {
 }
 
 // formatAsList formats selections as a bulleted list
+// Adds a leading newline (to separate from before-string) and a trailing newline
 func formatAsList(selections []string, bullet string) string {
 	var lines []string
 	for _, sel := range selections {
 		lines = append(lines, bullet+sel)
 	}
-	return strings.Join(lines, "\n")
+	return "\n" + strings.Join(lines, "\n") + "\n"
 }
 
 // formatAsJoinedString formats selections as a joined string
