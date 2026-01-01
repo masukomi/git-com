@@ -63,7 +63,7 @@ cd git-com
 go build -o git-com .
 #+end_src
 
-** Installing
+** Installing the executable
 Move the binary to a directory in your PATH:
 
 #+begin_src bash
@@ -80,6 +80,8 @@ Because the executable is named =git-com=, Git will automatically recognize it a
 #+begin_src bash
 git com
 #+end_src
+
+This will execute the =git-com= tool and start presenting you with the interactive elements specified in your repo's =.git-com.yaml= file.
 
 This works because Git looks for executables named =git-<command>= when you type =git <command>=.
 
