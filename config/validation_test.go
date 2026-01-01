@@ -117,9 +117,19 @@ func TestValidateElement(t *testing.T) {
 
 		// Confirmation type
 		{
-			name:    "valid confirmation element",
-			elem:    Element{Destination: DestTitle, Type: TypeConfirmation},
+			name:    "valid confirmation element without destination",
+			elem:    Element{Type: TypeConfirmation},
 			wantErr: false,
+		},
+		{
+			name:    "confirmation element with destination is invalid",
+			elem:    Element{Destination: DestTitle, Type: TypeConfirmation},
+			wantErr: true,
+		},
+		{
+			name:    "confirmation element with body destination is invalid",
+			elem:    Element{Destination: DestBody, Type: TypeConfirmation},
+			wantErr: true,
 		},
 
 		// Select type

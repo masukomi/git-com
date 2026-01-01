@@ -34,7 +34,26 @@ func ValidateConfig(cfg *Config) bool {
 
 // validateElement validates a single element based on its type
 func validateElement(elem Element) error {
-	// Check required destination
+	// Infer type from data-type if not specified
+	elemType := elem.Type
+	if elemType == "" && elem.DataType != "" {
+		elemType = TypeText
+	}
+
+	// Check required type
+	if elemType == "" {
+		return fmt.Errorf("missing type")
+	}
+
+	// Confirmation elements must not have a destination
+	if elemType == TypeConfirmation {
+		if elem.Destination != "" {
+			return fmt.Errorf("confirmation elements cannot have a destination")
+		}
+		return nil
+	}
+
+	// Check required destination (for non-confirmation elements)
 	if elem.Destination != DestTitle && elem.Destination != DestBody {
 		return fmt.Errorf("invalid destination: %s", elem.Destination)
 	}
@@ -49,17 +68,6 @@ func validateElement(elem Element) error {
 		}
 	}
 
-	// Infer type from data-type if not specified
-	elemType := elem.Type
-	if elemType == "" && elem.DataType != "" {
-		elemType = TypeText
-	}
-
-	// Check required type
-	if elemType == "" {
-		return fmt.Errorf("missing type")
-	}
-
 	// Validate based on type
 	switch elemType {
 	case TypeText:
@@ -70,8 +78,6 @@ func validateElement(elem Element) error {
 		return validateSelectElement(elem)
 	case TypeMultiSelect:
 		return validateMultiSelectElement(elem)
-	case TypeConfirmation:
-		return nil // No additional requirements
 	default:
 		return fmt.Errorf("unknown type: %s", elemType)
 	}
