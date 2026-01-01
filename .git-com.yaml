@@ -5,13 +5,13 @@ code-section:
     instructions: Which section of the codebase?
     modifiable: true
     options:
-        - documentation
+        - docs
         - core
         - git
         - validation
         - ui
         - ux
-        - configuration
+        - config
         - meta
         - tests
     type: select
@@ -21,10 +21,10 @@ change-type:
     instructions: What kind of change?
     modifiable: true
     options:
-        - enhancement
-        - refactoring
+        - feat.
+        - refactor
         - fix
-        - cleanup
+        - clean-up
     type: select
 commit-title:
     destination: title
