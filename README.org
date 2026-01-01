@@ -42,12 +42,20 @@ You can also add text around the user submitted input. In the example above the 
 
 * Installation
 
-** Prerequisites
+** Homebrew (macOS/Linux)
+
+#+begin_src bash
+brew tap masukomi/homebrew-tap
+brew install masukomi/homebrew-tap/git-com
+#+end_src
+
+** Building from Source
+
+*** Prerequisites
 - Go 1.21 or later
 - Git
 
-** Building from Source
-Clone the repository and build:
+*** Clone and Build
 
 #+begin_src bash
 git clone https://github.com/yourusername/git-com.git
