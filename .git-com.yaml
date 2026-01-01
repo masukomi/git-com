@@ -5,11 +5,12 @@ code-section:
     instructions: Which section of the codebase?
     modifiable: true
     options:
+        - documentation
         - core
         - git
         - validation
-        - interface
-        - documentation
+        - ui
+        - ux
         - configuration
         - meta
         - tests
