@@ -34,6 +34,15 @@ The key (=element-name=) is used internally to identify the element. It doesn't 
 *** text
 A single-line text input field.
 
+#+ATTR_HTML: :alt screenshot of text input with instructions provided
+#+ATTR_HTML: :title text input with instructions
+[[image-url:https://git-com.masukomi.org/images/screenshots/text_with_instructions@2x.png]]
+
+
+#+ATTR_HTML: :alt screenshot of text input with placeholder provided
+#+ATTR_HTML: :title text input with placeholder
+[[image-url:https://git-com.masukomi.org/images/screenshots/text_with_placeholder@2x.png]]
+
 **** Required Attributes
 - =destination=
 - =type: text= (can be omitted if =data-type= is specified)
@@ -64,6 +73,10 @@ ticket-number:
 *** multiline-text
 A multi-line text editor for longer input. Press =Enter= for new lines and =Ctrl+D= to submit.
 
+#+ATTR_HTML: :alt screenshot of multiline-text input with placeholder
+#+ATTR_HTML: :title multiline-text with placeholder
+[[image-url:https://git-com.masukomi.org/images/screenshots/multiline-text@2x.png]]
+
 **** Required Attributes
 - =destination=
 - =type: multiline-text=
@@ -86,6 +99,10 @@ commit-description:
 
 *** select
 A single-choice selection from a list of options.
+
+#+ATTR_HTML: :alt screenshot of select input with instructions
+#+ATTR_HTML: :title select input with instructions
+[[image-url:https://git-com.masukomi.org/images/screenshots/select@2x.png]]
 
 **** Required Attributes
 - =destination=
@@ -117,6 +134,10 @@ change-type:
 
 *** multi-select
 A multiple-choice selection from a list of options. Use =Space= to select items and =Enter= to submit.
+
+#+ATTR_HTML: :alt screenshot of multi-select input with instructions multiple items have been selected.
+#+ATTR_HTML: :title multi-select input with 2 options selected.
+[[image-url:https://git-com.masukomi.org/images/screenshots/multi-select@2x.png]]
 
 **** Required Attributes
 - =destination=
@@ -212,16 +233,21 @@ affected-areas:
 #+end_src
 
 *** confirmation
-A yes/no confirmation prompt. Selecting "No" aborts the commit.
+A yes/no confirmation prompt. Selecting "No" /always aborts/ the commit regardless of where it is in your flow. Use this to sanity check that contributors have done some required task before proceeding.
+
+You'll see an example of this at the end of every git-com run.
+
+#+ATTR_HTML: :alt screenshot of  instructions
+#+ATTR_HTML: :title select input with instructions
+[[image-url:https://git-com.masukomi.org/images/screenshots/confirmation@2x.png]]
+
 
 **** Required Attributes
-- =destination=
 - =type: confirmation=
 
 **** Example
 #+begin_src yaml
 confirm-commit:
-  destination: body
   type: confirmation
   instructions: "Are you sure you want to create this commit?"
 #+end_src
@@ -229,7 +255,19 @@ confirm-commit:
 *Note:* The confirmation element doesn't add any text to the commit message. It's purely for workflow control.
 
 ** Complete Example
-Here's the configuration that would produce the example commit message shown at the top of this document:
+
+#+begin_src text
+[docs] enhancement: adding to the spec
+
+Documenting some more of the edge cases we'll have to handle
+so that we make sure to get everything right.
+
+Ticket: 12345
+
+Tags: hotfix, refactoring
+#+end_src
+
+Here's a configuration that could produce that commit message.
 
 #+begin_src yaml
 code-section:
@@ -297,7 +335,16 @@ tags:
 #+end_src
 
 * Tips
+** Element Order Matters
+Elements are processed in the order they appear in the YAML file. Plan your configuration so that related items flow naturally. Title elements typically come first, followed by body elements.
+** Keep Title Options Short
+Having a pulldown for what part of a project the commit pertains to is one of the most useful things I do with =git-com=, however I recommend:
+- limit it to one =select= option in the title
+- don't use =multi-select= options in the title.
+  You can, but you shouldn't.
+- keep the options short. E.g. use "docs" instead of "documentation"
 
+[[https://martijnhols.nl/blog/how-to-write-a-good-git-commit-message][An ideal commit message]] has a title of 50 characters or less, after 72 characters many tools (including GitHub) start cutting things off. That's not a lot to work with. Specifying the part of the project helps save some descriptive words, but can also hurt if the option is too long.
 ** Modifiable Lists
 When =modifiable: true= is set on a select or multi-select element, an "Other…" option appears at the bottom of the list. Selecting it prompts for a new value, which is:
 1. Used in the current commit
@@ -305,14 +352,17 @@ When =modifiable: true= is set on a select or multi-select element, an "Other…
 
 This is useful for growing your options organically as your project evolves.
 
-** Element Order Matters
-Elements are processed in the order they appear in the YAML file. Plan your configuration so that related items flow naturally. Title elements typically come first, followed by body elements.
-
 ** Before and After Strings
 Use =before-string= and =after-string= to add formatting without requiring user input:
 - Add prefixes like ="["= or ="Ticket: "=
-- Add suffixes like ="]"= or =": "=
+- Add suffixes like ="] "= or =": "=
 - Add newlines in body elements with ="\n"= for spacing
 
+💡 Tip: If text will follow on the same line, be sure to include a trailing space in your =after-string=. Ex. use =": "= not =":"=
 ** Optional vs Required
 By default, all elements require input. Set =allow-empty: true= to make an element optional. For multi-select, you can customize the skip option text with =empty-selection-text=.
+
+** Emoji 😀
+Emoji are fine within the body of a commit, but don't use them in more structured elements like select options. A single emoji can be comprised of multiple code-points which are invisibly combined, and can cause headaches when trying to find matching commits.
+
+If it's something you're going to be searching for, or using to generate reports, don't include emoji in it.
