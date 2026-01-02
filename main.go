@@ -14,10 +14,6 @@ import (
 )
 
 func main() {
-	os.Exit(run())
-}
-
-func run() int {
 	// Parse command-line flags
 	amendFlag := flag.Bool("amend", false, "Amend the last commit")
 	flag.Parse()
@@ -32,12 +28,12 @@ func run() int {
 		} else {
 			output.PrintError("Error loading config: " + err.Error())
 		}
-		return 1
+		os.Exit(1)
 	}
 
 	// Validate configuration
 	if !config.ValidateConfig(cfg) {
-		return 1
+		os.Exit(1)
 	}
 
 	// Determine if we are creating a new commit or amending
@@ -48,11 +44,11 @@ func run() int {
 		hasCommits, err := commit.HasCommits()
 		if err != nil {
 			output.PrintError("Error checking for commits: " + err.Error())
-			return 1
+			os.Exit(1)
 		}
 		if !hasCommits {
 			output.PrintError("There are no commits to amend.")
-			return 1
+			os.Exit(1)
 		}
 	}
 
@@ -66,7 +62,7 @@ func run() int {
 			body, err := commit.GetLastCommitBody()
 			if err != nil {
 				output.PrintError("Error getting last commit body: " + err.Error())
-				return 1
+				os.Exit(1)
 			}
 			// body is already nil if empty, so just assign it
 			oldCommitMessage = body
@@ -78,11 +74,11 @@ func run() int {
 		hasStaged, err := commit.HasStagedFiles()
 		if err != nil {
 			output.PrintError("Error checking staged files: " + err.Error())
-			return 1
+			os.Exit(1)
 		}
 		if !hasStaged {
 			output.PrintWarningToStderr("You need to stage some files before we can commit.")
-			return 64
+			os.Exit(64)
 		}
 	}
 
@@ -91,10 +87,10 @@ func run() int {
 	if err != nil {
 		if errors.Is(err, prompt.ErrUserAborted) {
 			// User pressed Ctrl+C, exit silently
-			return 1
+			os.Exit(1)
 		}
 		output.PrintError("Error processing input: " + err.Error())
-		return 1
+		os.Exit(1)
 	}
 
 	// Clear screen and show commit preview
@@ -110,29 +106,29 @@ func run() int {
 	confirmed, err := tui.Confirm("Is this good?")
 	if err != nil {
 		if errors.Is(err, tui.ErrAborted) {
-			return 1
+			os.Exit(1)
 		}
 		output.PrintError("Error during confirmation: " + err.Error())
-		return 1
+		os.Exit(1)
 	}
 	if !confirmed {
-		return 0
+		os.Exit(0)
 	}
 
 	// Create or amend the commit based on the flag
 	if creatingNewCommit {
 		if err := commit.CreateCommit(result.Title, result.Body); err != nil {
 			output.PrintError("Error creating commit: " + err.Error())
-			return 1
+			os.Exit(1)
 		}
 	} else {
 		if err := commit.AmendCommit(result.Title, result.Body); err != nil {
 			output.PrintError("Error amending commit: " + err.Error())
-			return 1
+			os.Exit(1)
 		}
 	}
 
-	return 0
+	os.Exit(0)
 }
 
 // hasMultilineTextBodyElement checks if the config has any multiline-text
