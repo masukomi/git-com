@@ -8,12 +8,21 @@ import (
 	"git-com/tui"
 )
 
+const (
+	WritingPrompt = "Write something…"
+)
+
 // HandleMultilineText processes a multiline text input element
 // If initialContent is not nil, the text area will be pre-filled with that content
 func HandleMultilineText(elem config.Element, initialContent *string) (string, error) {
+	placeholder := elem.Placeholder
+	if placeholder == "" {
+		placeholder = WritingPrompt
+	}
+
 	for {
 		// Get multiline text input
-		result, err := tui.Write("Write something…", elem.Instructions, initialContent)
+		result, err := tui.Write(placeholder, elem.Instructions, initialContent)
 		if err != nil {
 			if isAbortError(err) {
 				return "", ErrUserAborted

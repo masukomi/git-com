@@ -82,9 +82,9 @@ A multi-line text editor for longer input. Press =Enter= for new lines and =Ctrl
 - =type: multiline-text=
 
 **** Optional Attributes
-| Attribute     | Description                               | Default |
-|---------------+-------------------------------------------+---------|
-| =placeholder= | Hint text shown in empty editor           | /none/  |
+| Attribute     | Description                     | Default            |
+|---------------+---------------------------------+--------------------|
+| =placeholder= | Hint text shown in empty editor | "Write something…" |
 
 Note: You generally don't want to have instructions /and/ a placeholder.
 **** Example
