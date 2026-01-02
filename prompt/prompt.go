@@ -11,7 +11,9 @@ type Result struct {
 }
 
 // ProcessElements processes all elements and builds the commit message
-func ProcessElements(cfg *config.Config) (*Result, error) {
+// If oldCommitMessage is not nil, it will be used to pre-fill the first
+// multiline-text element with destination=body
+func ProcessElements(cfg *config.Config, oldCommitMessage *string) (*Result, error) {
 	result := &Result{
 		Title: "",
 		Body:  "",
@@ -22,7 +24,7 @@ func ProcessElements(cfg *config.Config) (*Result, error) {
 		ClearScreen()
 
 		// Process element based on type
-		value, err := processElement(elem, cfg)
+		value, err := processElement(elem, cfg, &oldCommitMessage)
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +50,8 @@ func ProcessElements(cfg *config.Config) (*Result, error) {
 }
 
 // processElement routes to the appropriate handler based on element type
-func processElement(elem config.Element, cfg *config.Config) (string, error) {
+// oldCommitMessage is a pointer to a pointer so we can set it to nil after use
+func processElement(elem config.Element, cfg *config.Config, oldCommitMessage **string) (string, error) {
 	// Get effective type (handles inference from data-type)
 	elemType := config.GetEffectiveType(elem)
 
@@ -56,7 +59,14 @@ func processElement(elem config.Element, cfg *config.Config) (string, error) {
 	case config.TypeText:
 		return HandleText(elem)
 	case config.TypeMultilineText:
-		return HandleMultilineText(elem)
+		// Only pass oldCommitMessage if destination is body
+		var initialContent *string
+		if elem.Destination == config.DestBody && oldCommitMessage != nil && *oldCommitMessage != nil {
+			initialContent = *oldCommitMessage
+			// Set to nil after use so it's only used once
+			*oldCommitMessage = nil
+		}
+		return HandleMultilineText(elem, initialContent)
 	case config.TypeSelect:
 		return HandleSelect(elem, cfg)
 	case config.TypeMultiSelect:

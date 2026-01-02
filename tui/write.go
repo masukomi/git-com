@@ -11,13 +11,19 @@ import (
 )
 
 // Write displays an interactive multiline text input and returns the entered text
-func Write(placeholder string, instructions string) (string, error) {
+// If initialContent is not nil, the textarea will be pre-filled with that content
+func Write(placeholder string, instructions string, initialContent *string) (string, error) {
 	ta := textarea.New()
 	ta.Placeholder = placeholder
 	ta.Focus()
 	ta.CharLimit = 0 // No limit
 	ta.SetWidth(80)
 	ta.SetHeight(10)
+
+	// Pre-fill with initial content if provided
+	if initialContent != nil {
+		ta.SetValue(*initialContent)
+	}
 
 	km := writeDefaultKeymap()
 	ta.KeyMap.InsertNewline = km.InsertNewline

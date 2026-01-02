@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 
@@ -17,6 +18,10 @@ func main() {
 }
 
 func run() int {
+	// Parse command-line flags
+	amendFlag := flag.Bool("amend", false, "Amend the last commit")
+	flag.Parse()
+
 	// Load configuration from git root
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -35,19 +40,54 @@ func run() int {
 		return 1
 	}
 
-	// Check if there are staged files
-	hasStaged, err := commit.HasStagedFiles()
-	if err != nil {
-		output.PrintError("Error checking staged files: " + err.Error())
-		return 1
+	// Determine if we are creating a new commit or amending
+	creatingNewCommit := !*amendFlag
+
+	// If amending, check that there are commits to amend
+	if !creatingNewCommit {
+		hasCommits, err := commit.HasCommits()
+		if err != nil {
+			output.PrintError("Error checking for commits: " + err.Error())
+			return 1
+		}
+		if !hasCommits {
+			output.PrintError("There are no commits to amend.")
+			return 1
+		}
 	}
-	if !hasStaged {
-		output.PrintWarningToStderr("You need to stage some files before we can commit.")
-		return 64
+
+	// Initialize oldCommitMessage as nil
+	var oldCommitMessage *string
+
+	// If amending, check for multiline-text elements with destination=body
+	// and retrieve the last commit's body if such elements exist
+	if !creatingNewCommit {
+		if hasMultilineTextBodyElement(cfg) {
+			body, err := commit.GetLastCommitBody()
+			if err != nil {
+				output.PrintError("Error getting last commit body: " + err.Error())
+				return 1
+			}
+			// body is already nil if empty, so just assign it
+			oldCommitMessage = body
+		}
+	}
+
+	// Check if there are staged files (only for new commits, not amends)
+	if creatingNewCommit {
+		hasStaged, err := commit.HasStagedFiles()
+		if err != nil {
+			output.PrintError("Error checking staged files: " + err.Error())
+			return 1
+		}
+		if !hasStaged {
+			output.PrintWarningToStderr("You need to stage some files before we can commit.")
+			return 64
+		}
 	}
 
 	// Process all elements
-	result, err := prompt.ProcessElements(cfg)
+	result, err := prompt.ProcessElements(cfg, oldCommitMessage)
 	if err != nil {
 		if errors.Is(err, prompt.ErrUserAborted) {
 			// User pressed Ctrl+C, exit silently
@@ -79,11 +119,30 @@ func run() int {
 		return 0
 	}
 
-	// Create the commit
-	if err := commit.CreateCommit(result.Title, result.Body); err != nil {
-		output.PrintError("Error creating commit: " + err.Error())
-		return 1
+	// Create or amend the commit based on the flag
+	if creatingNewCommit {
+		if err := commit.CreateCommit(result.Title, result.Body); err != nil {
+			output.PrintError("Error creating commit: " + err.Error())
+			return 1
+		}
+	} else {
+		if err := commit.AmendCommit(result.Title, result.Body); err != nil {
+			output.PrintError("Error amending commit: " + err.Error())
+			return 1
+		}
 	}
 
 	return 0
+}
+
+// hasMultilineTextBodyElement checks if the config has any multiline-text
+// elements with destination=body
+func hasMultilineTextBodyElement(cfg *config.Config) bool {
+	for _, elem := range cfg.Elements {
+		elemType := config.GetEffectiveType(elem)
+		if elemType == config.TypeMultilineText && elem.Destination == config.DestBody {
+			return true
+		}
+	}
+	return false
 }
