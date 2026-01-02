@@ -41,15 +41,7 @@ func main() {
 
 	// If amending, check that there are commits to amend
 	if !creatingNewCommit {
-		hasCommits, err := commit.HasCommits()
-		if err != nil {
-			output.PrintError("Error checking for commits: " + err.Error())
-			os.Exit(1)
-		}
-		if !hasCommits {
-			output.PrintError("There are no commits to amend.")
-			os.Exit(1)
-		}
+		verifyHasCommitsToAmend()
 	}
 
 	// Initialize oldCommitMessage as nil
@@ -57,29 +49,14 @@ func main() {
 
 	// If amending, check for multiline-text elements with destination=body
 	// and retrieve the last commit's body if such elements exist
-	if !creatingNewCommit {
-		if hasMultilineTextBodyElement(cfg) {
-			body, err := commit.GetLastCommitBody()
-			if err != nil {
-				output.PrintError("Error getting last commit body: " + err.Error())
-				os.Exit(1)
-			}
-			// body is already nil if empty, so just assign it
-			oldCommitMessage = body
-		}
+	if !creatingNewCommit && hasMultilineTextBodyElement(cfg) {
+		// body is already nil if empty, so just assign it
+		oldCommitMessage = getOldCommitMessageBody()
 	}
 
 	// Check if there are staged files (only for new commits, not amends)
 	if creatingNewCommit {
-		hasStaged, err := commit.HasStagedFiles()
-		if err != nil {
-			output.PrintError("Error checking staged files: " + err.Error())
-			os.Exit(1)
-		}
-		if !hasStaged {
-			output.PrintWarningToStderr("You need to stage some files before we can commit.")
-			os.Exit(64)
-		}
+		verifyStagedFiles()
 	}
 
 	// Process all elements
@@ -87,7 +64,7 @@ func main() {
 	if err != nil {
 		if errors.Is(err, prompt.ErrUserAborted) {
 			// User pressed Ctrl+C, exit silently
-			os.Exit(1)
+			os.Exit(0)
 		}
 		output.PrintError("Error processing input: " + err.Error())
 		os.Exit(1)
@@ -103,32 +80,24 @@ func main() {
 	fmt.Fprintln(os.Stderr)
 
 	// Confirm with user
-	confirmed, err := tui.Confirm("Is this good?")
-	if err != nil {
-		if errors.Is(err, tui.ErrAborted) {
-			os.Exit(1)
-		}
-		output.PrintError("Error during confirmation: " + err.Error())
-		os.Exit(1)
-	}
-	if !confirmed {
-		os.Exit(0)
-	}
+	// exits if they don't accept it.
+	performFinalConfirmation("Is this good?")
 
 	// Create or amend the commit based on the flag
-	if creatingNewCommit {
-		if err := commit.CreateCommit(result.Title, result.Body); err != nil {
-			output.PrintError("Error creating commit: " + err.Error())
-			os.Exit(1)
-		}
-	} else {
-		if err := commit.AmendCommit(result.Title, result.Body); err != nil {
-			output.PrintError("Error amending commit: " + err.Error())
-			os.Exit(1)
-		}
-	}
+	commitOrAmend(creatingNewCommit, result)
 
 	os.Exit(0)
+}
+
+// attempts to get the body of the last commit
+// prints an error and exits if there was a problem
+func getOldCommitMessageBody() *string {
+	body, err := commit.GetLastCommitBody()
+	if err != nil {
+		output.PrintError("Error getting last commit body: " + err.Error())
+		os.Exit(1)
+	}
+	return body
 }
 
 // hasMultilineTextBodyElement checks if the config has any multiline-text
@@ -141,4 +110,66 @@ func hasMultilineTextBodyElement(cfg *config.Config) bool {
 		}
 	}
 	return false
+}
+
+// Create or amend the commit based on what the user indicated at launch.
+func commitOrAmend(creatingNewCommit bool, result *prompt.Result) {
+	if creatingNewCommit {
+		if err := commit.CreateCommit(result.Title, result.Body); err != nil {
+			output.PrintError("Error creating commit: " + err.Error())
+			os.Exit(1)
+		}
+	} else {
+		if err := commit.AmendCommit(result.Title, result.Body); err != nil {
+			output.PrintError("Error amending commit: " + err.Error())
+			os.Exit(1)
+		}
+	}
+}
+
+// tests if there are any commits.
+// if it has problem determining this it will print an error
+// if there are no commits it will print a warning
+// if it doesn't find any commits it will exit
+func verifyHasCommitsToAmend() {
+	hasCommits, err := commit.HasCommits()
+	if err != nil {
+		output.PrintError("Error checking for commits: " + err.Error())
+		os.Exit(1)
+	}
+	if !hasCommits {
+		output.PrintWarning("There are no commits to amend.")
+		os.Exit(1)
+	}
+}
+
+// checks if the user has staged any files
+// prints warning and exits if they haven't.
+func verifyStagedFiles() {
+	hasStaged, err := commit.HasStagedFiles()
+	if err != nil {
+		output.PrintError("Error checking staged files: " + err.Error())
+		os.Exit(1)
+	}
+	if !hasStaged {
+		output.PrintWarningToStderr("You need to stage some files before we can commit.")
+		os.Exit(64)
+	}
+}
+
+// asks the user if they're ok with the commit message
+// they've created.
+// Exits if they're not.
+func performFinalConfirmation(confirmationMessage string) {
+	confirmed, err := tui.Confirm("Is this good?")
+	if err != nil {
+		if errors.Is(err, tui.ErrAborted) {
+			os.Exit(1)
+		}
+		output.PrintError("Error during confirmation: " + err.Error())
+		os.Exit(1)
+	}
+	if !confirmed {
+		os.Exit(0)
+	}
 }
