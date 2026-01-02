@@ -150,51 +150,46 @@ func elementToMap(elem Element) map[string]interface{} {
 
 	m["destination"] = string(elem.Destination)
 
-	if elem.Type != "" {
-		m["type"] = string(elem.Type)
-	}
-
-	if elem.Instructions != "" {
-		m["instructions"] = elem.Instructions
-	}
-	if elem.BeforeString != "" {
-		m["before-string"] = elem.BeforeString
-	}
-	if elem.AfterString != "" {
-		m["after-string"] = elem.AfterString
-	}
-	if elem.AllowEmpty != nil {
-		m["allow-empty"] = *elem.AllowEmpty
-	}
-	if elem.Placeholder != "" {
-		m["placeholder"] = elem.Placeholder
-	}
-	if elem.DataType != "" {
-		m["data-type"] = string(elem.DataType)
-	}
-	if len(elem.Options) > 0 {
-		m["options"] = elem.Options
-	}
-	if elem.Modifiable != nil {
-		m["modifiable"] = *elem.Modifiable
-	}
-	if elem.RecordAs != "" {
-		m["record-as"] = string(elem.RecordAs)
-	}
-	if elem.BulletString != "" {
-		m["bullet-string"] = elem.BulletString
-	}
-	if elem.JoinString != "" {
-		m["join-string"] = elem.JoinString
-	}
-	if elem.Limit != 0 {
-		m["limit"] = elem.Limit
-	}
-	if elem.EmptySelectionText != "" {
-		m["empty-selection-text"] = elem.EmptySelectionText
-	}
+	addStringIfNotEmpty(m, "type", string(elem.Type))
+	addStringIfNotEmpty(m, "instructions", elem.Instructions)
+	addStringIfNotEmpty(m, "before-string", elem.BeforeString)
+	addStringIfNotEmpty(m, "after-string", elem.AfterString)
+	addBoolIfNotNil(m, "allow-empty", elem.AllowEmpty)
+	addStringIfNotEmpty(m, "placeholder", elem.Placeholder)
+	addStringIfNotEmpty(m, "data-type", string(elem.DataType))
+	addOptionsIfNotEmpty(m, "options", elem.Options)
+	addBoolIfNotNil(m, "modifiable", elem.Modifiable)
+	addStringIfNotEmpty(m, "record-as", string(elem.RecordAs))
+	addStringIfNotEmpty(m, "bullet-string", elem.BulletString)
+	addStringIfNotEmpty(m, "join-string", elem.JoinString)
+	addIntIfNotZero(m, "limit", elem.Limit)
+	addStringIfNotEmpty(m, "empty-selection-text", elem.EmptySelectionText)
 
 	return m
+}
+
+func addStringIfNotEmpty(m map[string]interface{}, key, value string) {
+	if value != "" {
+		m[key] = value
+	}
+}
+
+func addBoolIfNotNil(m map[string]interface{}, key string, value *bool) {
+	if value != nil {
+		m[key] = *value
+	}
+}
+
+func addIntIfNotZero(m map[string]interface{}, key string, value int) {
+	if value != 0 {
+		m[key] = value
+	}
+}
+
+func addOptionsIfNotEmpty(m map[string]interface{}, key string, options []string) {
+	if len(options) > 0 {
+		m[key] = options
+	}
 }
 
 // AddOptionToElement adds a new option to an element's options list

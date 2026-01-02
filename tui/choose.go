@@ -167,81 +167,121 @@ func (m chooseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		return m, nil
 	case tea.KeyMsg:
-		start, end := m.paginator.GetSliceBounds(len(m.items))
 		km := m.keymap
 		switch {
 		case key.Matches(msg, km.Down):
-			m.index++
-			if m.index >= len(m.items) {
-				m.index = 0
-				m.paginator.Page = 0
-			}
-			if m.index >= end {
-				m.paginator.NextPage()
-			}
+			m = m.handleDown()
 		case key.Matches(msg, km.Up):
-			m.index--
-			if m.index < 0 {
-				m.index = len(m.items) - 1
-				m.paginator.Page = m.paginator.TotalPages - 1
-			}
-			if m.index < start {
-				m.paginator.PrevPage()
-			}
+			m = m.handleUp()
 		case key.Matches(msg, km.Right):
-			m.paginator.NextPage()
-			m.index = min(m.index+m.height, len(m.items)-1)
+			m = m.handlePageDown()
 		case key.Matches(msg, km.Left):
-			m.paginator.PrevPage()
-			m.index = max(m.index-m.height, 0)
+			m = m.handlePageUp()
 		case key.Matches(msg, km.End):
-			m.index = len(m.items) - 1
-			m.paginator.Page = m.paginator.TotalPages - 1
+			m = m.handleEnd()
 		case key.Matches(msg, km.Home):
-			m.index = 0
-			m.paginator.Page = 0
+			m = m.handleHome()
 		case key.Matches(msg, km.ToggleAll):
-			if m.limit <= 1 {
-				break
-			}
-			if m.numSelected < len(m.items) && m.numSelected < m.limit {
-				m = m.selectAll()
-			} else {
-				m = m.deselectAll()
-			}
-		case key.Matches(msg, km.Quit):
-			m.quitting = true
-			return m, tea.Quit
-		case key.Matches(msg, km.Abort):
+			m = m.handleToggleAll()
+		case key.Matches(msg, km.Quit), key.Matches(msg, km.Abort):
 			m.quitting = true
 			return m, tea.Quit
 		case key.Matches(msg, km.Toggle):
-			if m.limit == 1 {
-				break
-			}
-			if m.items[m.index].selected {
-				m.items[m.index].selected = false
-				m.numSelected--
-			} else if m.numSelected < m.limit {
-				m.items[m.index].selected = true
-				m.items[m.index].order = m.currentOrder
-				m.numSelected++
-				m.currentOrder++
-			}
+			m = m.handleToggle()
 		case key.Matches(msg, km.Submit):
-			m.quitting = true
-			// If nothing is selected, select the cursor item
-			if m.numSelected < 1 {
-				m.items[m.index].selected = true
-			}
-			m.submitted = true
-			return m, tea.Quit
+			return m.handleSubmit()
 		}
 	}
 
 	var cmd tea.Cmd
 	m.paginator, cmd = m.paginator.Update(msg)
 	return m, cmd
+}
+
+func (m chooseModel) handleDown() chooseModel {
+	_, end := m.paginator.GetSliceBounds(len(m.items))
+	m.index++
+	if m.index >= len(m.items) {
+		m.index = 0
+		m.paginator.Page = 0
+	}
+	if m.index >= end {
+		m.paginator.NextPage()
+	}
+	return m
+}
+
+func (m chooseModel) handleUp() chooseModel {
+	start, _ := m.paginator.GetSliceBounds(len(m.items))
+	m.index--
+	if m.index < 0 {
+		m.index = len(m.items) - 1
+		m.paginator.Page = m.paginator.TotalPages - 1
+	}
+	if m.index < start {
+		m.paginator.PrevPage()
+	}
+	return m
+}
+
+func (m chooseModel) handlePageDown() chooseModel {
+	m.paginator.NextPage()
+	m.index = min(m.index+m.height, len(m.items)-1)
+	return m
+}
+
+func (m chooseModel) handlePageUp() chooseModel {
+	m.paginator.PrevPage()
+	m.index = max(m.index-m.height, 0)
+	return m
+}
+
+func (m chooseModel) handleEnd() chooseModel {
+	m.index = len(m.items) - 1
+	m.paginator.Page = m.paginator.TotalPages - 1
+	return m
+}
+
+func (m chooseModel) handleHome() chooseModel {
+	m.index = 0
+	m.paginator.Page = 0
+	return m
+}
+
+func (m chooseModel) handleToggleAll() chooseModel {
+	if m.limit <= 1 {
+		return m
+	}
+	if m.numSelected < len(m.items) && m.numSelected < m.limit {
+		return m.selectAll()
+	}
+	return m.deselectAll()
+}
+
+func (m chooseModel) handleToggle() chooseModel {
+	if m.limit == 1 {
+		return m
+	}
+	if m.items[m.index].selected {
+		m.items[m.index].selected = false
+		m.numSelected--
+	} else if m.numSelected < m.limit {
+		m.items[m.index].selected = true
+		m.items[m.index].order = m.currentOrder
+		m.numSelected++
+		m.currentOrder++
+	}
+	return m
+}
+
+func (m chooseModel) handleSubmit() (tea.Model, tea.Cmd) {
+	m.quitting = true
+	// If nothing is selected, select the cursor item
+	if m.numSelected < 1 {
+		m.items[m.index].selected = true
+	}
+	m.submitted = true
+	return m, tea.Quit
 }
 
 func (m chooseModel) selectAll() chooseModel {
@@ -277,22 +317,13 @@ func (m chooseModel) View() string {
 
 	var s strings.Builder
 	start, end := m.paginator.GetSliceBounds(len(m.items))
+	visibleItems := m.items[start:end]
 
-	for i, item := range m.items[start:end] {
-		if i == m.index%m.height {
-			s.WriteString(m.cursorStyle.Render(m.cursor))
-		} else {
-			s.WriteString(strings.Repeat(" ", lipgloss.Width(m.cursor)))
-		}
-
-		if item.selected {
-			s.WriteString(m.selectedItemStyle.Render(m.selectedPrefix + item.text))
-		} else if i == m.index%m.height {
-			s.WriteString(m.cursorStyle.Render(m.cursorPrefix + item.text))
-		} else {
-			s.WriteString(m.itemStyle.Render(m.unselectedPrefix + item.text))
-		}
-		if i != m.height-1 && i != len(m.items[start:end])-1 {
+	for i, item := range visibleItems {
+		isCursor := i == m.index%m.height
+		isLastItem := i == m.height-1 || i == len(visibleItems)-1
+		s.WriteString(m.renderItem(item, isCursor))
+		if !isLastItem {
 			s.WriteRune('\n')
 		}
 	}
@@ -302,14 +333,41 @@ func (m chooseModel) View() string {
 		s.WriteString("  " + m.paginator.View())
 	}
 
+	return m.assembleParts(s.String())
+}
+
+// renderItem renders a single item line with cursor and selection indicators
+func (m chooseModel) renderItem(item chooseItem, isCursor bool) string {
+	var s strings.Builder
+
+	// Render cursor column
+	if isCursor {
+		s.WriteString(m.cursorStyle.Render(m.cursor))
+	} else {
+		s.WriteString(strings.Repeat(" ", lipgloss.Width(m.cursor)))
+	}
+
+	// Render item text with appropriate style
+	if item.selected {
+		s.WriteString(m.selectedItemStyle.Render(m.selectedPrefix + item.text))
+	} else if isCursor {
+		s.WriteString(m.cursorStyle.Render(m.cursorPrefix + item.text))
+	} else {
+		s.WriteString(m.itemStyle.Render(m.unselectedPrefix + item.text))
+	}
+
+	return s.String()
+}
+
+// assembleParts combines header, items, and help into the final view
+func (m chooseModel) assembleParts(itemsView string) string {
 	var parts []string
 	if m.header != "" {
 		parts = append(parts, m.headerStyle.Render(m.header))
 	}
-	parts = append(parts, s.String())
+	parts = append(parts, itemsView)
 	if m.showHelp {
 		parts = append(parts, "", m.help.View(m.keymap))
 	}
-
 	return lipgloss.JoinVertical(lipgloss.Left, parts...)
 }

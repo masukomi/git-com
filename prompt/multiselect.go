@@ -10,31 +10,10 @@ import (
 
 // HandleMultiSelect processes a multi-select element
 func HandleMultiSelect(elem config.Element, cfg *config.Config) (string, error) {
-	// Determine the empty selection text if allow-empty is true (italicized for display)
-	var emptySelectionText string
-	if elem.IsAllowEmpty() {
-		emptySelectionText = Italicize(elem.GetEmptySelectionText())
-	}
+	options, emptyText := buildMultiSelectOptions(elem)
+	limit := getMultiSelectLimit(elem)
 
 	for {
-		// Build options list
-		options := make([]string, 0, len(elem.Options)+2)
-		if emptySelectionText != "" {
-			// Add empty selection option at the top
-			options = append(options, emptySelectionText)
-		}
-		options = append(options, elem.Options...)
-
-		// Add "Other…" if modifiable
-		if elem.IsModifiable() {
-			options = append(options, otherOption)
-		}
-
-		// Get selections (limit 0 means no limit, or use elem.Limit)
-		limit := elem.Limit
-		if limit == 0 {
-			limit = -1 // No limit in our tui.Choose
-		}
 		selections, err := tui.Choose(options, limit, elem.Instructions)
 		if err != nil {
 			if isAbortError(err) {
@@ -43,36 +22,71 @@ func HandleMultiSelect(elem config.Element, cfg *config.Config) (string, error) 
 			return "", err
 		}
 
-		// Check if user selected the empty selection option
-		if emptySelectionText != "" && containsEmptySelection(selections, emptySelectionText) {
-			// Treat as empty response
-			return "", nil
+		result, retry, err := processMultiSelectResult(selections, emptyText, elem, cfg)
+		if err != nil {
+			return "", err
 		}
-
-		// Handle "Other…" selection
-		if elem.IsModifiable() && containsOption(selections, otherOption) {
-			newValue, err := handleOtherSelection(elem.Name, cfg)
-			if err != nil {
-				if err == ErrUserAborted {
-					// User cancelled, re-show the multi-select
-					continue
-				}
-				return "", err
-			}
-			// Replace "Other…" with the new value in selections
-			selections = replaceOption(selections, otherOption, newValue)
-		}
-
-		// Check if empty is allowed
-		if len(selections) == 0 && !elem.IsAllowEmpty() {
-			output.PrintWarning("This input is required.")
+		if retry {
 			continue
 		}
 
-		// Format the result based on record-as
-		result := formatMultiSelectResult(selections, elem)
 		return result, nil
 	}
+}
+
+// buildMultiSelectOptions builds the options list with optional empty selection and "Other"
+func buildMultiSelectOptions(elem config.Element) (options []string, emptyText string) {
+	options = make([]string, 0, len(elem.Options)+2)
+
+	if elem.IsAllowEmpty() {
+		emptyText = Italicize(elem.GetEmptySelectionText())
+		options = append(options, emptyText)
+	}
+
+	options = append(options, elem.Options...)
+
+	if elem.IsModifiable() {
+		options = append(options, otherOption)
+	}
+
+	return options, emptyText
+}
+
+// getMultiSelectLimit returns the selection limit for the element
+func getMultiSelectLimit(elem config.Element) int {
+	if elem.Limit == 0 {
+		return -1 // No limit in tui.Choose
+	}
+	return elem.Limit
+}
+
+// processMultiSelectResult processes the user's selections
+// Returns (result, shouldRetry, error)
+func processMultiSelectResult(selections []string, emptyText string, elem config.Element, cfg *config.Config) (string, bool, error) {
+	// Check if user selected the empty selection option
+	if emptyText != "" && containsOption(selections, emptyText) {
+		return "", false, nil
+	}
+
+	// Handle "Other…" selection
+	if elem.IsModifiable() && containsOption(selections, otherOption) {
+		newValue, err := handleOtherSelection(elem.Name, cfg)
+		if err == ErrUserAborted {
+			return "", true, nil // Retry
+		}
+		if err != nil {
+			return "", false, err
+		}
+		selections = replaceOption(selections, otherOption, newValue)
+	}
+
+	// Check if empty is allowed
+	if len(selections) == 0 && !elem.IsAllowEmpty() {
+		output.PrintWarning("This input is required.")
+		return "", true, nil // Retry
+	}
+
+	return formatMultiSelectResult(selections, elem), false, nil
 }
 
 // containsOption checks if a specific option is in the selections

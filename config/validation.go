@@ -34,46 +34,73 @@ func ValidateConfig(cfg *Config) bool {
 
 // validateElement validates a single element based on its type
 func validateElement(elem Element) error {
-	// Infer type from data-type if not specified
-	elemType := elem.Type
-	if elemType == "" && elem.DataType != "" {
-		elemType = TypeText
-	}
+	elemType := inferElementType(elem)
 
-	// Check required type
 	if elemType == "" {
 		return fmt.Errorf("missing type")
 	}
 
-	// Confirmation elements must not have a destination
+	// Confirmation elements have different validation rules
 	if elemType == TypeConfirmation {
-		if elem.Destination != "" {
-			return fmt.Errorf("confirmation elements cannot have a destination")
-		}
-		return nil
+		return validateConfirmationElement(elem)
 	}
 
-	// Check required destination (for non-confirmation elements)
+	if err := validateDestination(elem); err != nil {
+		return err
+	}
+
+	if err := validateTitleConstraints(elem); err != nil {
+		return err
+	}
+
+	return validateByType(elemType, elem)
+}
+
+// inferElementType returns the element type, inferring from data-type if needed
+func inferElementType(elem Element) ElementType {
+	if elem.Type == "" && elem.DataType != "" {
+		return TypeText
+	}
+	return elem.Type
+}
+
+// validateConfirmationElement validates confirmation-specific rules
+func validateConfirmationElement(elem Element) error {
+	if elem.Destination != "" {
+		return fmt.Errorf("confirmation elements cannot have a destination")
+	}
+	return nil
+}
+
+// validateDestination checks that the destination is valid for non-confirmation elements
+func validateDestination(elem Element) error {
 	if elem.Destination != DestTitle && elem.Destination != DestBody {
 		return fmt.Errorf("invalid destination: %s", elem.Destination)
 	}
+	return nil
+}
 
-	// Title elements cannot have newlines in before-string or after-string
-	if elem.Destination == DestTitle {
-		if strings.Contains(elem.BeforeString, "\n") {
-			return fmt.Errorf("before-string cannot contain newlines for title destination")
-		}
-		if strings.Contains(elem.AfterString, "\n") {
-			return fmt.Errorf("after-string cannot contain newlines for title destination")
-		}
+// validateTitleConstraints checks title-specific constraints (no newlines)
+func validateTitleConstraints(elem Element) error {
+	if elem.Destination != DestTitle {
+		return nil
 	}
+	if strings.Contains(elem.BeforeString, "\n") {
+		return fmt.Errorf("before-string cannot contain newlines for title destination")
+	}
+	if strings.Contains(elem.AfterString, "\n") {
+		return fmt.Errorf("after-string cannot contain newlines for title destination")
+	}
+	return nil
+}
 
-	// Validate based on type
+// validateByType dispatches to type-specific validation
+func validateByType(elemType ElementType, elem Element) error {
 	switch elemType {
 	case TypeText:
 		return validateTextElement(elem)
 	case TypeMultilineText:
-		return nil // No additional requirements
+		return nil
 	case TypeSelect:
 		return validateSelectElement(elem)
 	case TypeMultiSelect:
