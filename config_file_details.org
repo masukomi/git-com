@@ -3,6 +3,74 @@
 * The configuration file
 When =git-com= runs it will look for a =.git-com.yaml= or =.git-com.yml= file at the root of your repository. It's a good idea to commit this file, especially if you work on a team that wants to use =git-com= so that they can always have consistently structured commit messages with all the important info.
 
+** Quick Start
+The following YAML replicates the [[https://www.conventionalcommits.org/en/v1.0.0/][Conventional Commits 1.0.0]] commit message standard. It's a good starting point.
+
+Notes:
+- =feat=, =fix=, =feat!=, and =fix!= are the only official options for "type", however I've added the suggested "type" options in. Feel free to modify to suit your needs/preferences.
+- The list of choices for the optional =scope= element "… /must/ consist of a noun describing a section of the codebase". I've added some starter elements that you might find in an desktop app, but you should modify this list depending on what kind of project you're working on. Whatever you add, be sure to keep the words short. For example, I used =db= instead of database.
+- "Ticket" isn't part of CC, but it is an example they provide of something you could include at the end of your commits. The configuration below makes it optional, but restricts it to integer input. If your ticketing system uses letters too, or you want to allow multiple ticket numbers per commit, you can just delete the =data-type= attribute.
+
+Modify this YAML and store it in a file named ~.git-com.yml~ at the root of your repository. You can have a different file for every repository.
+
+#+begin_src yaml
+commit-type:
+  type: select
+  destination: title
+  instructions: What type of work?
+  options:
+    - fix
+    - feat
+    - build
+    - chore
+    - ci
+    - docs
+    - style
+    - refactor
+    - perf
+    - test
+    - fix!   # indicates a breaking change
+    - feat!  # indicates a breaking change
+scope:
+  type: select
+  destination: title
+  instructions: (optional) What section of codebase?
+  allow-empty: true
+  before-string: "(" # no leading space because the CC spec demands no space
+  after-string: ")"
+  # no trailing space in afte-string because it needs to be handled with
+  # a leading space in 'subject' in case the user doesn't choose a 'scope'
+  options:
+    - menus
+    - exts
+    - decoders
+    - errors
+    - graphql
+    - helpers
+    - models
+    - services
+    - views
+    - db
+subject:
+  type: text
+  destination: title
+  before-string: " " # empty space to separate it from either scope or title
+  placeholder: "a short description…"
+commit-description:
+    allow-empty: true
+    destination: body
+    instructions: Please describe your changes.
+    placeholder: "(optional details)"
+    type: multiline-text
+ticket-number:
+    type: text
+    destination: body
+    data-type: integer
+    allow-empty: true
+    before-string: "\n\nTicket: "
+    instructions: Associated Ticket Number (if any)
+#+end_src
+
 ** Overall structure
 The configuration file is a YAML document where each top-level key defines an element. Elements are processed in the order they appear in the file, and each element prompts the user for input.
 
