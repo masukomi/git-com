@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 if [ -z "$FORMULA_PATH" ]; then
     FORMULA_PATH="$HOME/workspace/homebrew-tap/Formula/git-com.rb"
