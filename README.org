@@ -1,7 +1,7 @@
 #+title: README
-<div>
-  <img style="max-width: 15em;" src="https://git-com.masukomi.org/images/logo.svg">
-</div>
+
+#+html: <div><img src="https://git-com.masukomi.org/images/icon_250x250.png"></div>
+
 
 * git-com
 A tool that makes it easy to produce structured commit messages, that are easily customizable to your project's need.
