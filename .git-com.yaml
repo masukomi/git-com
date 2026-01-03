@@ -1,62 +1,47 @@
-code-section:
+change-type:
+    type: select
+    destination: title
     after-string: '] '
     before-string: '['
-    destination: title
-    instructions: Which section of the codebase?
-    modifiable: true
-    options:
-        - docs
-        - core
-        - git
-        - validation
-        - ui
-        - ux
-        - config
-        - meta
-        - tests
-    type: select
-change-type:
-    after-string: ': '
-    destination: title
     instructions: What kind of change?
     modifiable: true
     options:
-        - feat.
-        - refactor
         - fix
+        - add
+        - refactor
         - clean-up
-    type: select
 commit-title:
+    type: text
     destination: title
     placeholder: Commit Title
-    type: text
 commit-description:
     allow-empty: true
     destination: body
     instructions: Please describe your changes.
     type: multiline-text
-ticket-number:
+code-sections:
+    type: multi-select
+    record-as: joined-string
     allow-empty: true
-    before-string: "\n\nTicket: "
-    data-type: integer
+    before-string: "\n\nCode Sections: "
+    after-string: "\n"
     destination: body
-    instructions: Associated Ticket Number (if any)
-    type: text
-tags:
-    allow-empty: true
-    before-string: "\n\nTags: "
-    destination: body
-    empty-selection-text: Don't Tag
-    instructions: (optional) add relevant tags
+    instructions: Which section(s) of the codebase?
     modifiable: true
     options:
-        - tech-debt
-        - testing
-        - quality-of-life
-        - maintainability
-        - dependencies
-        - refactoring
-        - hotfix
-        - guard-rails
-    record-as: joined-string
-    type: multi-select
+        - core
+        - docs
+        - git
+        - ui
+        - ux
+        - yaml
+        - config
+        - meta
+        - tests
+ticket-number:
+    type: text
+    destination: body
+    data-type: integer
+    allow-empty: true
+    before-string: "\n\nTicket: "
+    instructions: "Associated Ticket Number (if any)"
