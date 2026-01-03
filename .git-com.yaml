@@ -19,11 +19,12 @@ commit-description:
     destination: body
     instructions: Please describe your changes.
     type: multiline-text
+    after-string: "\n"
 code-sections:
     type: multi-select
     record-as: joined-string
     allow-empty: true
-    before-string: "\n\nCode Sections: "
+    before-string: "\nCode Sections: "
     after-string: "\n"
     destination: body
     instructions: Which section(s) of the codebase?
