@@ -10,9 +10,16 @@ import (
 	"github.com/go-git/go-git/v6/plumbing/object"
 )
 
+// openRepository opens the git repository, searching up the directory tree if needed
+func openRepository() (*git.Repository, error) {
+	return git.PlainOpenWithOptions(".", &git.PlainOpenOptions{
+		DetectDotGit: true,
+	})
+}
+
 // HasStagedFiles checks if there are any staged files in the repository
 func HasStagedFiles() (bool, error) {
-	repo, err := git.PlainOpen(".")
+	repo, err := openRepository()
 	if err != nil {
 		return false, err
 	}
@@ -40,7 +47,7 @@ func HasStagedFiles() (bool, error) {
 // CreateCommit creates a git commit with the given title and body
 func CreateCommit(title, body string) error {
 	// Open the repository
-	repo, err := git.PlainOpen(".")
+	repo, err := openRepository()
 	if err != nil {
 		return err
 	}
@@ -112,7 +119,7 @@ func buildCommitMessage(title, body string) string {
 
 // HasCommits checks if there are any commits in the repository
 func HasCommits() (bool, error) {
-	repo, err := git.PlainOpen(".")
+	repo, err := openRepository()
 	if err != nil {
 		return false, err
 	}
@@ -129,7 +136,7 @@ func HasCommits() (bool, error) {
 // GetLastCommitBody returns the body of the last commit (everything after the 2nd line)
 // Returns nil if there is no body or if the body is empty
 func GetLastCommitBody() (*string, error) {
-	repo, err := git.PlainOpen(".")
+	repo, err := openRepository()
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +170,7 @@ func GetLastCommitBody() (*string, error) {
 
 // AmendCommit amends the last commit with a new message
 func AmendCommit(title, body string) error {
-	repo, err := git.PlainOpen(".")
+	repo, err := openRepository()
 	if err != nil {
 		return err
 	}
