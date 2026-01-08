@@ -44,6 +44,11 @@ func TestValidateElement(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name:    "title with format containing newline",
+			elem:    Element{Destination: DestTitle, Type: TypeText, Format: strPtr("%-12s\n")},
+			wantErr: true,
+		},
+		{
 			name:    "title with newline in middle of before-string",
 			elem:    Element{Destination: DestTitle, Type: TypeText, BeforeString: "pre\nfix"},
 			wantErr: true,
@@ -574,6 +579,79 @@ func TestValidateConfig_RequiresTitleElement(t *testing.T) {
 			cfg := &Config{Elements: tt.elements}
 			if got := ValidateConfig(cfg); got != tt.want {
 				t.Errorf("ValidateConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestValidateFormat(t *testing.T) {
+	tests := []struct {
+		name    string
+		elem    Element
+		wantErr bool
+	}{
+		{
+			name:    "nil format is valid",
+			elem:    Element{Format: nil},
+			wantErr: false,
+		},
+		{
+			name:    "empty format is invalid",
+			elem:    Element{Format: strPtr("")},
+			wantErr: true,
+		},
+		{
+			name:    "simple %s format",
+			elem:    Element{Format: strPtr("%s")},
+			wantErr: false,
+		},
+		{
+			name:    "left-aligned padded format",
+			elem:    Element{Format: strPtr("%-12s")},
+			wantErr: false,
+		},
+		{
+			name:    "right-aligned padded format",
+			elem:    Element{Format: strPtr("%12s")},
+			wantErr: false,
+		},
+		{
+			name:    "format with precision",
+			elem:    Element{Format: strPtr("%10.5s")},
+			wantErr: false,
+		},
+		{
+			name:    "format with text around verb",
+			elem:    Element{Format: strPtr("prefix %-12s suffix")},
+			wantErr: false,
+		},
+		{
+			name:    "format without verb",
+			elem:    Element{Format: strPtr("no verb here")},
+			wantErr: true,
+		},
+		{
+			name:    "format with wrong verb type",
+			elem:    Element{Format: strPtr("%d")},
+			wantErr: true,
+		},
+		{
+			name:    "format with multiple verbs",
+			elem:    Element{Format: strPtr("%s %s")},
+			wantErr: true,
+		},
+		{
+			name:    "format with escaped percent",
+			elem:    Element{Format: strPtr("100%% %-10s")},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateFormat(tt.elem)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateFormat() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

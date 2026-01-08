@@ -2,10 +2,15 @@ package config
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"git-com/output"
 )
+
+// formatVerbRegex matches sprintf format verbs that accept a string
+// Matches: %s, %-5s, %10s, %-10s, %5.5s, etc.
+var formatVerbRegex = regexp.MustCompile(`%-?\d*\.?\d*s`)
 
 // ValidateConfig validates all elements in the configuration
 // Returns true if all elements are valid, false otherwise
@@ -53,6 +58,10 @@ func validateElement(elem Element) error {
 		return err
 	}
 
+	if err := validateFormat(elem); err != nil {
+		return err
+	}
+
 	return validateByType(elemType, elem)
 }
 
@@ -91,6 +100,33 @@ func validateTitleConstraints(elem Element) error {
 	if strings.Contains(elem.AfterString, "\n") {
 		return fmt.Errorf("after-string cannot contain newlines for title destination")
 	}
+	if elem.Format != nil && strings.Contains(*elem.Format, "\n") {
+		return fmt.Errorf("format cannot contain newlines for title destination")
+	}
+	return nil
+}
+
+// validateFormat checks that the format string is valid
+func validateFormat(elem Element) error {
+	// Format not specified - valid
+	if elem.Format == nil {
+		return nil
+	}
+
+	// Format key present but empty - invalid
+	if *elem.Format == "" {
+		return fmt.Errorf("format cannot be empty")
+	}
+
+	// Check that format contains exactly one string verb
+	matches := formatVerbRegex.FindAllString(*elem.Format, -1)
+	if len(matches) == 0 {
+		return fmt.Errorf("format must contain a %%s verb (e.g., %%-12s)")
+	}
+	if len(matches) > 1 {
+		return fmt.Errorf("format must contain exactly one %%s verb")
+	}
+
 	return nil
 }
 

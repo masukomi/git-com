@@ -93,9 +93,12 @@ The key (=element-name=) is used internally to identify the element. It doesn't 
 | =instructions=  | Text displayed above the input prompt              | /none/  |
 | =before-string= | Text prepended to the user's input                 | /none/  |
 | =after-string=  | Text appended to the user's input                  | /none/  |
+| =format=        | =sprintf=-style format string (e.g., =%-12s=)      | /none/  |
 | =allow-empty=   | Whether empty input is accepted                    | =false= |
 
-*Note:* Elements with =destination: title= cannot have newlines in =before-string= or =after-string=.
+*Note:* Elements with =destination: title= cannot have newlines in =before-string=, =after-string=, or =format=.
+
+The =format= attribute applies =sprintf=-style formatting to the final value (after =before-string= and =after-string= are applied). This is useful for padding output to align your git log. See the README for examples.
 
 ** Elements
 
@@ -321,6 +324,46 @@ confirm-commit:
 #+end_src
 
 *Note:* The confirmation element doesn't add any text to the commit message. It's purely for workflow control.
+
+** Formatting for Alignment
+Elements support an optional =format= attribute that applies =sprintf=-style formatting to the final value (after =before-string= and =after-string= are applied). This is useful for aligning your git log output.
+
+For example, if you have a =change-type= element with varying length options like "feat", "fix", "refactor", your git log might look uneven:
+
+#+begin_src text
+[feat] new format functionality
+[fix] annoying bug that did bad thing
+[refactor] cleaned up the code
+#+end_src
+
+By adding ~format: "%-11s"~ to the element you can pad the output to a consistent width:
+
+#+begin_src yaml
+change-type:
+  destination: title
+  type: select
+  before-string: "["
+  after-string: "]"
+  format: "%-11s"
+  options:
+    - feat
+    - fix
+    - refactor
+#+end_src
+
+This produces aligned output in your git log:
+
+#+begin_src text
+[feat]     new format functionality
+[fix]      annoying bug that did bad thing
+[refactor] cleaned up the code
+#+end_src
+
+Note: =%-11s= is saying we want this left aligned and padded on the right to a width of 11 characters. That's the length of the longest option (8) + the length of the =before-string= (1) + the length of the =after-string= (1) + an additional character to separate it from what follows. Setting it to a number too small will /not/ cut off any text, but it will mean your alignment won't be consistent.
+
+The format string uses Go's =fmt.Sprintf= syntax. See the [[https://pkg.go.dev/fmt][fmt package documentation]]. Common patterns:
+- =%-12s= - left-align, pad to 12 characters
+- =%12s= - right-align, pad to 12 characters
 
 ** Complete Example
 

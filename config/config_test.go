@@ -11,6 +11,11 @@ func boolPtr(b bool) *bool {
 	return &b
 }
 
+// Helper to create a string pointer
+func strPtr(s string) *string {
+	return &s
+}
+
 // --- types.go tests ---
 
 func TestIsAllowEmpty(t *testing.T) {
@@ -48,6 +53,26 @@ func TestIsModifiable(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.elem.IsModifiable(); got != tt.expected {
 				t.Errorf("IsModifiable() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestHasFormat(t *testing.T) {
+	tests := []struct {
+		name     string
+		elem     Element
+		expected bool
+	}{
+		{"nil pointer", Element{}, false},
+		{"empty string", Element{Format: strPtr("")}, false},
+		{"valid format", Element{Format: strPtr("%-12s")}, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.elem.HasFormat(); got != tt.expected {
+				t.Errorf("HasFormat() = %v, want %v", got, tt.expected)
 			}
 		})
 	}

@@ -1,6 +1,8 @@
 package prompt
 
 import (
+	"fmt"
+
 	"git-com/config"
 )
 
@@ -79,7 +81,11 @@ func processElement(elem config.Element, cfg *config.Config, oldCommitMessage **
 	}
 }
 
-// applyDecorators applies before-string and after-string to a value
+// applyDecorators applies before-string, after-string, and format to a value
 func applyDecorators(value string, elem config.Element) string {
-	return elem.BeforeString + value + elem.AfterString
+	decorated := elem.BeforeString + value + elem.AfterString
+	if elem.HasFormat() {
+		decorated = fmt.Sprintf(*elem.Format, decorated)
+	}
+	return decorated
 }

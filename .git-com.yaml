@@ -1,10 +1,11 @@
 change-type:
     type: select
     destination: title
-    after-string: '] '
+    after-string: ']'
     before-string: '['
     instructions: What kind of change?
     modifiable: true
+    format: "%-12s"
     options:
         - fix
         - add

@@ -56,6 +56,7 @@ type Element struct {
 	Instructions string `yaml:"instructions,omitempty"`
 	BeforeString string `yaml:"before-string,omitempty"`
 	AfterString  string `yaml:"after-string,omitempty"`
+	Format       *string `yaml:"format,omitempty"` // sprintf-style format applied after before/after strings
 	AllowEmpty   *bool  `yaml:"allow-empty,omitempty"` // Pointer to distinguish unset from false
 
 	// Text-specific attributes
@@ -88,6 +89,11 @@ func (e *Element) IsAllowEmpty() bool {
 // IsModifiable returns true if the element allows adding new options
 func (e *Element) IsModifiable() bool {
 	return e.Modifiable != nil && *e.Modifiable
+}
+
+// HasFormat returns true if the format was explicitly set to a non-empty value
+func (e *Element) HasFormat() bool {
+	return e.Format != nil && *e.Format != ""
 }
 
 // GetBulletString returns the bullet string with default
