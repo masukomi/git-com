@@ -365,6 +365,36 @@ The format string uses Go's =fmt.Sprintf= syntax. See the [[https://pkg.go.dev/f
 - =%-12s= - left-align, pad to 12 characters
 - =%12s= - right-align, pad to 12 characters
 
+*** Multi-select Lists
+For =multi-select= elements with ~record-as: list~, the =format= is applied to /each line/ individually (after the bullet string) rather than to the entire multi-line result. This allows you to align list items.
+
+#+begin_src yaml
+affected-areas:
+  destination: body
+  type: multi-select
+  record-as: list
+  bullet-string: "- "
+  format: "%20s"
+  before-string: "\nAffected:\n"
+  options:
+    - frontend
+    - backend
+    - database
+#+end_src
+
+Selecting "frontend" and "database" produces:
+
+#+begin_src text
+
+Affected:
+          - frontend
+          - database
+#+end_src
+
+Each line is aligned-right and padded to 20 characters (including the bullet). Note that =before-string= and =after-string= still wrap the entire list, not each line.
+
+For =multi-select= with ~record-as: joined-string~, the =format= is applied to the entire joined result as usual.
+
 ** Complete Example
 
 #+begin_src text

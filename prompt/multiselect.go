@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"fmt"
 	"strings"
 
 	"git-com/config"
@@ -125,7 +126,7 @@ func formatMultiSelectResult(selections []string, elem config.Element) string {
 
 	switch elem.RecordAs {
 	case config.RecordAsList:
-		return formatAsList(selections, elem.GetBulletString())
+		return formatAsList(selections, elem)
 	case config.RecordAsJoinedString:
 		return formatAsJoinedString(selections, elem.GetJoinString())
 	default:
@@ -136,10 +137,16 @@ func formatMultiSelectResult(selections []string, elem config.Element) string {
 
 // formatAsList formats selections as a bulleted list
 // Adds a leading newline (to separate from before-string) and a trailing newline
-func formatAsList(selections []string, bullet string) string {
+// If the element has a format, it is applied to each line (after adding the bullet)
+func formatAsList(selections []string, elem config.Element) string {
+	bullet := elem.GetBulletString()
 	var lines []string
 	for _, sel := range selections {
-		lines = append(lines, bullet+sel)
+		line := bullet + sel
+		if elem.HasFormat() {
+			line = fmt.Sprintf(*elem.Format, line)
+		}
+		lines = append(lines, line)
 	}
 	return "\n" + strings.Join(lines, "\n") + "\n"
 }

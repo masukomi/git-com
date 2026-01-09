@@ -82,8 +82,16 @@ func processElement(elem config.Element, cfg *config.Config, oldCommitMessage **
 }
 
 // applyDecorators applies before-string, after-string, and format to a value
+// For multi-select with record-as: list, format is applied per-line in formatAsList,
+// so we skip applying it here
 func applyDecorators(value string, elem config.Element) string {
 	decorated := elem.BeforeString + value + elem.AfterString
+
+	// Skip format for multi-select lists (already applied per-line)
+	if elem.Type == config.TypeMultiSelect && elem.RecordAs == config.RecordAsList {
+		return decorated
+	}
+
 	if elem.HasFormat() {
 		decorated = fmt.Sprintf(*elem.Format, decorated)
 	}

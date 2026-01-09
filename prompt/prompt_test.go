@@ -121,6 +121,28 @@ func TestApplyDecorators(t *testing.T) {
 			},
 			expected: "[foo]",
 		},
+		{
+			name:  "multi-select list skips format (applied per-line elsewhere)",
+			value: "\n- foo\n- bar\n",
+			elem: config.Element{
+				Type:         config.TypeMultiSelect,
+				RecordAs:     config.RecordAsList,
+				BeforeString: "Items:",
+				Format:       strPtr("%-50s"),
+			},
+			expected: "Items:\n- foo\n- bar\n",
+		},
+		{
+			name:  "multi-select joined-string still applies format",
+			value: "foo, bar",
+			elem: config.Element{
+				Type:         config.TypeMultiSelect,
+				RecordAs:     config.RecordAsJoinedString,
+				BeforeString: "Tags: ",
+				Format:       strPtr("%-20s"),
+			},
+			expected: "Tags: foo, bar      ",
+		},
 	}
 
 	for _, tt := range tests {
