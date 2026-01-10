@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 // Helper to create a bool pointer
@@ -291,7 +293,7 @@ third:
   options:
     - a
 `
-		elements, err := parseOrderedYAML([]byte(yaml))
+		elements, _, err := parseOrderedYAML([]byte(yaml))
 		if err != nil {
 			t.Fatalf("parseOrderedYAML() error = %v", err)
 		}
@@ -325,7 +327,7 @@ third:
   limit: 3
   empty-selection-text: None
 `
-		elements, err := parseOrderedYAML([]byte(yaml))
+		elements, _, err := parseOrderedYAML([]byte(yaml))
 		if err != nil {
 			t.Fatalf("parseOrderedYAML() error = %v", err)
 		}
@@ -373,6 +375,49 @@ third:
 		}
 		if elem.EmptySelectionText != "None" {
 			t.Errorf("EmptySelectionText = %q, want 'None'", elem.EmptySelectionText)
+		}
+	})
+
+	t.Run("filters out meta elements", func(t *testing.T) {
+		yaml := `first:
+  destination: title
+  type: text
+meta_element_changelog_generator:
+  output_format: markdown
+  categories:
+    - feat
+    - fix
+second:
+  destination: body
+  type: text
+meta_element_release_notes:
+  template: "./template.md"
+`
+		elements, metaElements, err := parseOrderedYAML([]byte(yaml))
+		if err != nil {
+			t.Fatalf("parseOrderedYAML() error = %v", err)
+		}
+
+		// Should only have 2 regular elements
+		if len(elements) != 2 {
+			t.Fatalf("expected 2 elements, got %d", len(elements))
+		}
+		if elements[0].Name != "first" {
+			t.Errorf("element 0: expected name 'first', got %q", elements[0].Name)
+		}
+		if elements[1].Name != "second" {
+			t.Errorf("element 1: expected name 'second', got %q", elements[1].Name)
+		}
+
+		// Should have 2 meta elements
+		if len(metaElements) != 2 {
+			t.Fatalf("expected 2 meta elements, got %d", len(metaElements))
+		}
+		if metaElements[0].Name != "meta_element_changelog_generator" {
+			t.Errorf("meta element 0: expected name 'meta_element_changelog_generator', got %q", metaElements[0].Name)
+		}
+		if metaElements[1].Name != "meta_element_release_notes" {
+			t.Errorf("meta element 1: expected name 'meta_element_release_notes', got %q", metaElements[1].Name)
 		}
 	})
 }
@@ -484,6 +529,56 @@ func TestSaveConfig(t *testing.T) {
 		}
 		if elem.EmptySelectionText != "Skip" {
 			t.Errorf("EmptySelectionText = %q, want 'Skip'", elem.EmptySelectionText)
+		}
+	})
+
+	t.Run("preserves meta elements", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, ".git-com.yaml")
+
+		// Create a config with both regular and meta elements
+		var metaNode yaml.Node
+		metaNode.Kind = yaml.MappingNode
+		metaNode.Content = []*yaml.Node{
+			{Kind: yaml.ScalarNode, Value: "output_format", Tag: "!!str"},
+			{Kind: yaml.ScalarNode, Value: "markdown", Tag: "!!str"},
+		}
+
+		cfg := &Config{
+			FilePath: configPath,
+			Elements: []Element{
+				{
+					Name:        "title",
+					Destination: DestTitle,
+					Type:        TypeText,
+				},
+			},
+			MetaElements: []MetaElement{
+				{
+					Name: "meta_element_changelog",
+					Node: &metaNode,
+				},
+			},
+		}
+
+		if err := SaveConfig(cfg); err != nil {
+			t.Fatalf("SaveConfig() error = %v", err)
+		}
+
+		// Reload and verify meta elements are preserved
+		loaded, err := LoadConfigFromPath(configPath)
+		if err != nil {
+			t.Fatalf("LoadConfigFromPath() error = %v", err)
+		}
+
+		if len(loaded.Elements) != 1 {
+			t.Errorf("expected 1 element, got %d", len(loaded.Elements))
+		}
+		if len(loaded.MetaElements) != 1 {
+			t.Fatalf("expected 1 meta element, got %d", len(loaded.MetaElements))
+		}
+		if loaded.MetaElements[0].Name != "meta_element_changelog" {
+			t.Errorf("meta element name = %q, want 'meta_element_changelog'", loaded.MetaElements[0].Name)
 		}
 	})
 }

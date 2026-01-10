@@ -49,51 +49,64 @@ func LoadConfigFromPath(path string) (*Config, error) {
 		return nil, err
 	}
 
-	elements, err := parseOrderedYAML(data)
+	elements, metaElements, err := parseOrderedYAML(data)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Config{
-		Elements: elements,
-		FilePath: path,
+		Elements:     elements,
+		MetaElements: metaElements,
+		FilePath:     path,
 	}, nil
 }
 
-// parseOrderedYAML parses YAML while preserving the order of elements
-func parseOrderedYAML(data []byte) ([]Element, error) {
+// parseOrderedYAML parses YAML while preserving the order of elements.
+// Meta elements (keys starting with "meta_element_") are returned separately
+// and not processed as regular elements.
+func parseOrderedYAML(data []byte) ([]Element, []MetaElement, error) {
 	var node yaml.Node
 	if err := yaml.Unmarshal(data, &node); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Handle empty file
 	if len(node.Content) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	// node.Content[0] is the document root (a MappingNode)
 	docNode := node.Content[0]
 	if docNode.Kind != yaml.MappingNode {
-		return nil, errors.New("expected a mapping at the root of the YAML")
+		return nil, nil, errors.New("expected a mapping at the root of the YAML")
 	}
 
 	// Content contains alternating key/value nodes
 	var elements []Element
+	var metaElements []MetaElement
 	content := docNode.Content
 	for i := 0; i < len(content); i += 2 {
 		keyNode := content[i]
 		valueNode := content[i+1]
 
+		// Skip meta elements but preserve them for later
+		if strings.HasPrefix(keyNode.Value, MetaElementPrefix) {
+			metaElements = append(metaElements, MetaElement{
+				Name: keyNode.Value,
+				Node: valueNode,
+			})
+			continue
+		}
+
 		var elem Element
 		if err := valueNode.Decode(&elem); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		elem.Name = keyNode.Value
 		elements = append(elements, elem)
 	}
 
-	return elements, nil
+	return elements, metaElements, nil
 }
 
 // findGitRoot finds the root directory of the current git repository
@@ -131,6 +144,16 @@ func SaveConfig(cfg *Config) error {
 		}
 
 		mapNode.Content = append(mapNode.Content, &keyNode, &valueNode)
+	}
+
+	// Preserve meta elements at the end
+	for _, meta := range cfg.MetaElements {
+		var keyNode yaml.Node
+		keyNode.Kind = yaml.ScalarNode
+		keyNode.Value = meta.Name
+		keyNode.Tag = "!!str"
+
+		mapNode.Content = append(mapNode.Content, &keyNode, meta.Node)
 	}
 
 	docNode.Content = append(docNode.Content, &mapNode)

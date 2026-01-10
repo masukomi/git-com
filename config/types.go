@@ -1,5 +1,7 @@
 package config
 
+import "gopkg.in/yaml.v3"
+
 // ElementType represents the type of input element
 type ElementType string
 
@@ -75,10 +77,21 @@ type Element struct {
 	EmptySelectionText string   `yaml:"empty-selection-text,omitempty"`
 }
 
+// MetaElementPrefix is the prefix for meta elements that git-com ignores
+// but preserves for third-party tools
+const MetaElementPrefix = "meta_element_"
+
+// MetaElement stores a raw meta element for preservation during save
+type MetaElement struct {
+	Name string
+	Node *yaml.Node
+}
+
 // Config holds the ordered list of elements parsed from YAML
 type Config struct {
-	Elements []Element
-	FilePath string // Path to the config file for saving modifications
+	Elements     []Element
+	MetaElements []MetaElement // Meta elements preserved for third-party tools
+	FilePath     string        // Path to the config file for saving modifications
 }
 
 // IsAllowEmpty returns true if empty input is allowed

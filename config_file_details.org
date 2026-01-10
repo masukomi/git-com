@@ -71,6 +71,30 @@ ticket-number:
     instructions: Associated Ticket Number (if any)
 #+end_src
 
+** Meta Elements for Third-Party Tools
+Third-party tools that build on =git-com= (such as changelog generators) can store their repository-specific configurations in the =.git-com.y[a]ml= file. To avoid conflicts with =git-com='s element processing, these configurations must use top-level keys that begin with =meta_element_=.
+
+The convention is =meta_element_= followed by the tool name. For example:
+
+#+begin_src yaml
+meta_element_changelog_generator:
+  output_format: markdown
+  include_breaking_changes: true
+  categories:
+    - feat
+    - fix
+    - docs
+
+meta_element_release_notes:
+  template: "./templates/release.md"
+#+end_src
+
+=git-com= will:
+- Ignore these elements during commit message generation
+- Preserve them when saving changes to the config file (e.g., when adding new options via =modifiable: true=)
+
+This allows your repository's =.git-com.yaml= to serve as a central configuration file for multiple tools in your commit/release workflow.
+
 ** Overall structure
 The configuration file is a YAML document where each top-level key defines an element. Elements are processed in the order they appear in the file, and each element prompts the user for input.
 
