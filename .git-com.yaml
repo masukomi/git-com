@@ -11,6 +11,15 @@ change-type:
         - add
         - refactor
         - clean-up
+breaking-indicator:
+  type: select
+  destination: title
+  instructions: "Skip unless breaking change"
+  allow-empty: true
+  empty-selection-text: "Skip"
+  after-string: ": "
+  options:
+    - breaking
 commit-title:
     type: text
     destination: title
@@ -47,3 +56,10 @@ ticket-number:
     allow-empty: true
     before-string: "\n\nTicket: "
     instructions: "Associated Ticket Number (if any)"
+meta_element_changelog:
+    display_aliases:
+      fix: "fixed"
+      add: "added"
+      refactor: "refactored"
+      clean-up: "cleaned"
+
