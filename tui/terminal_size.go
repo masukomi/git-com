@@ -20,7 +20,7 @@ func terminalWidth() int {
 // Falls back to 10 if terminal size cannot be determined.
 func terminalHeight() int {
 	_, height, err := term.GetSize(int(os.Stderr.Fd()))
-	if err != nil || width == 0 {
+	if err != nil || height == 0 {
 		return 10
 	}
 	return height
