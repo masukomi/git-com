@@ -17,8 +17,8 @@ func Write(placeholder string, instructions string, initialContent *string) (str
 	ta.Placeholder = placeholder
 	ta.Focus()
 	ta.CharLimit = 0 // No limit
-	ta.SetWidth(80)
-	ta.SetHeight(10)
+	ta.SetWidth(terminalWidth())
+	ta.SetHeight(calculateHeight(instructions))
 
 	// Pre-fill with initial content if provided
 	if initialContent != nil {

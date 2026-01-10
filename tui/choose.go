@@ -33,7 +33,7 @@ func Choose(options []string, limit int, instructions string) ([]string, error) 
 	}
 
 	// Set up paginator
-	height := 10
+	height := calculateHeight(instructions)
 	if len(items) < height {
 		height = len(items)
 	}
