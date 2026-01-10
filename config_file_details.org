@@ -292,7 +292,13 @@ Setting =join-string= to =" / "= would give you this in your commit message
 foo / bar / baz
 #+end_src
 
+***** before-string & after-string notes
+When using a =multi-select= with =record-as= set to list, the behavior is slightly different. The list it produces will begin and end with a newline character ( =\n= ). As a result, you don't need to end your =before-string= with one to separate it from the list, and you don't need to start your =after-string= with one to separate it.
+
+
 **** Example
+A =multi-select= that would produce a joined string like ="Tags: hotfix, security"= might look like this:
+
 #+begin_src yaml
 tags:
   destination: body
@@ -310,7 +316,21 @@ tags:
   allow-empty: true
   empty-selection-text: "Skip tags"
   modifiable: true
+#+end_src
 
+
+A =multi-select= that would produce a bullet list like this:
+#+begin_example
+
+Affected Areas:
+- backend
+- api
+- tests
+
+#+end_example
+
+might look like this:
+#+begin_src yaml
 affected-areas:
   destination: body
   type: multi-select
@@ -443,11 +463,12 @@ code-section:
     - input
     - git
     - output
-    - documentation
-    - testing
+    - docs
+    - tests
   modifiable: true
   before-string: "["
   after-string: "] "
+  #^^ note the trailing space to separate it from what comes next
 
 change-type:
   destination: title
@@ -461,6 +482,7 @@ change-type:
     - docs
   modifiable: true
   after-string: ": "
+  #^^ note the trailing space to separate it from what comes next
 
 commit-title:
   destination: title
@@ -480,6 +502,8 @@ ticket-number:
   data-type: integer
   instructions: "Enter the ticket number (optional)"
   before-string: "\nTicket: "
+  #^^ note the newline character to drop it down a line,
+  #   also the trailing space to separate it from the entered value
   allow-empty: true
 
 tags:
@@ -493,7 +517,11 @@ tags:
     - performance
   record-as: joined-string
   join-string: ", "
+  # using just "," would produce "foo,bar,baz" without spaces
   before-string: "\nTags: "
+  #^^ note the newline character to drop it down a line,
+  #   also the trailing space to separate it from the
+  #   joined-string that will follow
   allow-empty: true
   empty-selection-text: "No tags"
   modifiable: true
