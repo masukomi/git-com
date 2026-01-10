@@ -328,9 +328,10 @@ func (m chooseModel) View() string {
 		}
 	}
 
-	if m.paginator.TotalPages > 1 {
+	if m.paginator.TotalPages > 1 && m.paginator.Page < m.paginator.TotalPages-1 {
 		s.WriteString(strings.Repeat("\n", m.height-m.paginator.ItemsOnPage(len(m.items))+1))
-		s.WriteString("  " + m.paginator.View())
+		moreStyle := lipgloss.NewStyle().Italic(true)
+		s.WriteString("  " + moreStyle.Render("More…"))
 	}
 
 	return m.assembleParts(s.String())
