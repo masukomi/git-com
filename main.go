@@ -70,18 +70,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Clear screen and show commit preview
-	prompt.ClearScreen()
-	fmt.Fprintln(os.Stderr, result.Title)
-	if result.Body != "" {
-		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, result.Body)
-	}
-	fmt.Fprintln(os.Stderr)
-
-	// Confirm with user
-	// exits if they don't accept it.
-	performFinalConfirmation("Is this good?")
+	// Confirm with user (shows preview and allows editing if rejected)
+	performFinalConfirmation(result)
 
 	// Create or amend the commit based on the flag
 	commitOrAmend(creatingNewCommit, result)
@@ -158,18 +148,57 @@ func verifyStagedFiles() {
 }
 
 // asks the user if they're ok with the commit message
-// they've created.
-// Exits if they're not.
-func performFinalConfirmation(confirmationMessage string) {
-	confirmed, err := tui.Confirm("Is this good?")
-	if err != nil {
-		if errors.Is(err, tui.ErrAborted) {
+// they've created. If they reject it, allows them to edit
+// the title and body, then re-confirm.
+// Exits if user aborts (Ctrl+C).
+func performFinalConfirmation(result *prompt.Result) {
+	for {
+		// Show preview
+		prompt.ClearScreen()
+		fmt.Fprintln(os.Stderr, result.Title)
+		if result.Body != "" {
+			fmt.Fprintln(os.Stderr)
+			fmt.Fprintln(os.Stderr, result.Body)
+		}
+		fmt.Fprintln(os.Stderr)
+
+		// Confirm
+		confirmed, err := tui.Confirm("Is this good?")
+		if err != nil {
+			if errors.Is(err, tui.ErrAborted) {
+				os.Exit(1)
+			}
+			output.PrintError("Error during confirmation: " + err.Error())
 			os.Exit(1)
 		}
-		output.PrintError("Error during confirmation: " + err.Error())
-		os.Exit(1)
-	}
-	if !confirmed {
-		os.Exit(0)
+
+		if confirmed {
+			return // proceed to commit
+		}
+
+		// Edit title
+		prompt.ClearScreen()
+		newTitle, err := tui.InputWithValue("", "Edit Title", &result.Title)
+		if err != nil {
+			if errors.Is(err, tui.ErrAborted) {
+				os.Exit(1)
+			}
+			output.PrintError("Error editing title: " + err.Error())
+			os.Exit(1)
+		}
+		result.Title = newTitle
+
+		// Edit body
+		newBody, err := tui.Write("", "Edit Description", &result.Body)
+		if err != nil {
+			if errors.Is(err, tui.ErrAborted) {
+				os.Exit(1)
+			}
+			output.PrintError("Error editing description: " + err.Error())
+			os.Exit(1)
+		}
+		result.Body = newBody
+
+		// Loop back to show preview and confirm again
 	}
 }

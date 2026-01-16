@@ -12,11 +12,24 @@ import (
 
 // Input displays an interactive text input and returns the entered text
 func Input(placeholder string, instructions string) (string, error) {
+	return InputWithValue(placeholder, instructions, nil)
+}
+
+// InputWithValue displays an interactive text input and returns the entered text
+// If initialContent is not nil, the input will be pre-filled with that content
+func InputWithValue(placeholder string, instructions string, initialContent *string) (string, error) {
 	ti := textinput.New()
 	ti.Placeholder = placeholder
 	ti.Focus()
 	ti.CharLimit = 0 // No limit
 	ti.Width = 60
+
+	// Pre-fill with placeholder or initialContent (if provided)
+	if initialContent != nil {
+		ti.SetValue(*initialContent)
+	} else {
+		ti.Placeholder = placeholder
+	}
 
 	m := inputModel{
 		textinput: ti,
