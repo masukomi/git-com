@@ -1,0 +1,82 @@
+* v1.6.0
+
+** [fixed]
+- hitting ESC at a confirmation now exits
+
+** [added]
+- final validation now leads to edit if NO
+- now supports include-empty attribute
+
+** [cleaned]
+- backporting some notes from web site
+- removed unnecessary newline before Ticket: in .git-com
+- removed instructions.org
+
+* v1.5.0
+
+** [fixed]
+- elements of type select now support allow-empty: true
+
+** [added]
+- support for meta_element_ nodes
+
+* v1.4.1
+
+** [fixed]
+- error when calculating height of current terminal
+
+* v1.4.0
+
+** [add]
+- dynamic width & height for lists and textareas
+
+** [clean-up]
+- improved look of list pagination
+
+* v1.3.0
+
+** [add]
+- added support for 'format' attribute
+
+* v1.2.2
+
+** [fix]
+
+- icon in readme on github
+- was erorring if run from a subdirectory
+
+* v1.2.1
+
+** [fix]
+- removed "BOGUS CHANGE" text from readme
+- bad "set" flag in homebrew update script
+
+* v1.2.0
+
+** [added]
+- added support for amending last commit
+- improving config file details page
+- added script to update homebrew formula
+- confirmation elements w/ destination = error
+
+** [fixed]
+- Added Charmbracelet Inc as copyright holder
+- multi-select→list was missing some newlines
+- multiline-text now handles placeholder text
+
+** [refactored]
+- changed how / where main() exits
+- simplified main()
+- minimized method complexity
+
+* v1.1.0
+
+** [changed]
+- now shows the commit message it has constructed
+  and asks you to confirm if you'd like to proceed
+  with it.
+
+* v1.0.0
+
+initial release of git-com
+
