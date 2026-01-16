@@ -62,6 +62,10 @@ func validateElement(elem Element) error {
 		return err
 	}
 
+	if err := validateIncludeEmpty(elem); err != nil {
+		return err
+	}
+
 	return validateByType(elemType, elem)
 }
 
@@ -127,6 +131,14 @@ func validateFormat(elem Element) error {
 		return fmt.Errorf("format must contain exactly one %%s verb")
 	}
 
+	return nil
+}
+
+// validateIncludeEmpty checks that include-empty is only used with allow-empty
+func validateIncludeEmpty(elem Element) error {
+	if elem.IncludeEmpty != nil && *elem.IncludeEmpty && !elem.IsAllowEmpty() {
+		return fmt.Errorf("include-empty requires allow-empty to be true")
+	}
 	return nil
 }
 

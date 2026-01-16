@@ -112,18 +112,64 @@ The key (=element-name=) is used internally to identify the element. It doesn't 
 - =type= - The element type (see below). Can be omitted if =data-type= is specified, in which case =text= is assumed.
 
 *** Optional Attributes (All Elements)
-| Attribute       | Description                                        | Default |
-|-----------------+----------------------------------------------------+---------|
-| =instructions=  | Text displayed above the input prompt              | /none/  |
-| =before-string= | Text prepended to the user's input                 | /none/  |
-| =after-string=  | Text appended to the user's input                  | /none/  |
-| =format=        | =sprintf=-style format string (e.g., =%-12s=)      | /none/  |
-| =allow-empty=   | Whether empty input is accepted                    | =false= |
+| Attribute        | Description                                        | Default |
+|------------------+----------------------------------------------------+---------|
+| =instructions=   | Text displayed above the input prompt              | /none/  |
+| =before-string=  | Text prepended to the user's input                 | /none/  |
+| =after-string=   | Text appended to the user's input                  | /none/  |
+| =format=         | =sprintf=-style format string (e.g., =%-12s=)      | /none/  |
+| =allow-empty=    | Whether empty input is accepted                    | =false= |
+| =include-empty=  | Apply decorators even when value is empty          | =false= |
 
 *Note:* Elements with =destination: title= cannot have newlines in =before-string=, =after-string=, or =format=.
 
 The =format= attribute applies =sprintf=-style formatting to the final value (after =before-string= and =after-string= are applied). This is useful for padding output to align your git log. See the README for examples.
 
+*** include-empty
+The =include-empty= flag allows you to apply decorators (=before-string=, =after-string=, =format=) even when the user chooses no value. This attribute is only valid when =allow-empty= is also set to =true=.
+
+By default, when a user skips an optional element (selects empty), nothing is added to the commit message from the element. With =include-empty: true=, the decorators are still applied even though the value itself is empty.
+
+You will rarely need this.
+
+
+**** Example Use Case
+The conventional commits standard says to use a =!= to indicate a breaking change. For example, a bug-fix that is a non-breaking change would be marked with =fix=, but one with a breaking change would be marked =fix!=
+
+We don't want to add =!= options to every change type in our list, because that doubles the length of our list and makes the user deal with unnecessary choices that are almost always irrelevant. Instead we can just have a second =select= element with =allow-empty= set to =true= and a single option in the list =!=. For most commits the user can just whack the enter key a second time and blow past it.
+
+But, what if you wanted the change type and the optional =!= to be enclosed in brackets? Ex. =[fix]= and =[fix!]=
+
+We can accomplish this by using =include-empty: true= which will cause the =after-string= to always be used, even if the user doesn't choose anything.
+
+#+begin_src yaml
+change-type:
+  type: select
+  destination: title
+  before-string: '['
+  instructions: What kind of change?
+  options:
+      - fix
+      - add
+breaking-change:
+  type: select
+  destination: title
+  after-string: ']'
+  instructions: "Skip unless breaking change"
+  allow-empty: true
+  include-empty: true
+  options:
+    - "!"
+#+end_src
+
+Let's say the user chose "fix" when the =change-type= element was presented.
+
+| User Selection | Without =include-empty= | With =include-empty: true= | Combined with previous choice |
+|----------------+-------------------------+----------------------------+-------------------------------|
+| Empty (skip)   | /nothing added/         | =]=                        | =[fix]=                       |
+| =!=            | =!]=                    | =!]=                       | =[fix!]=                      |
+
+Note: the =formatting= attribute will still only apply to the element it is part of. So, adding =formatting= to the =breaking-change= element in the example will /not/ consider the string provided by the =change-type= element in the prior selection.
 ** Elements
 
 *** text

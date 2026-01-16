@@ -178,6 +178,7 @@ func elementToMap(elem Element) map[string]interface{} {
 	addStringIfNotEmpty(m, "before-string", elem.BeforeString)
 	addStringIfNotEmpty(m, "after-string", elem.AfterString)
 	addBoolIfNotNil(m, "allow-empty", elem.AllowEmpty)
+	addBoolIfNotNil(m, "include-empty", elem.IncludeEmpty)
 	addStringIfNotEmpty(m, "placeholder", elem.Placeholder)
 	addStringIfNotEmpty(m, "data-type", string(elem.DataType))
 	addOptionsIfNotEmpty(m, "options", elem.Options)

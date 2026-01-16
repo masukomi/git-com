@@ -60,6 +60,26 @@ func TestIsModifiable(t *testing.T) {
 	}
 }
 
+func TestIsIncludeEmpty(t *testing.T) {
+	tests := []struct {
+		name     string
+		elem     Element
+		expected bool
+	}{
+		{"nil pointer", Element{}, false},
+		{"false value", Element{IncludeEmpty: boolPtr(false)}, false},
+		{"true value", Element{IncludeEmpty: boolPtr(true)}, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.elem.IsIncludeEmpty(); got != tt.expected {
+				t.Errorf("IsIncludeEmpty() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestHasFormat(t *testing.T) {
 	tests := []struct {
 		name     string

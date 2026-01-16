@@ -59,7 +59,8 @@ type Element struct {
 	BeforeString string `yaml:"before-string,omitempty"`
 	AfterString  string `yaml:"after-string,omitempty"`
 	Format       *string `yaml:"format,omitempty"` // sprintf-style format applied after before/after strings
-	AllowEmpty   *bool  `yaml:"allow-empty,omitempty"` // Pointer to distinguish unset from false
+	AllowEmpty   *bool `yaml:"allow-empty,omitempty"`   // Pointer to distinguish unset from false
+	IncludeEmpty *bool `yaml:"include-empty,omitempty"` // When true, apply decorators even for empty values
 
 	// Text-specific attributes
 	Placeholder string   `yaml:"placeholder,omitempty"`
@@ -97,6 +98,11 @@ type Config struct {
 // IsAllowEmpty returns true if empty input is allowed
 func (e *Element) IsAllowEmpty() bool {
 	return e.AllowEmpty != nil && *e.AllowEmpty
+}
+
+// IsIncludeEmpty returns true if empty values should still have decorators applied
+func (e *Element) IsIncludeEmpty() bool {
+	return e.IncludeEmpty != nil && *e.IncludeEmpty
 }
 
 // IsModifiable returns true if the element allows adding new options

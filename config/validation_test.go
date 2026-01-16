@@ -137,6 +137,33 @@ func TestValidateElement(t *testing.T) {
 			wantErr: true,
 		},
 
+		// include-empty validation
+		{
+			name:    "include-empty true with allow-empty true is valid",
+			elem:    Element{Destination: DestTitle, Type: TypeSelect, Options: []string{"a"}, AllowEmpty: boolPtr(true), IncludeEmpty: boolPtr(true)},
+			wantErr: false,
+		},
+		{
+			name:    "include-empty true without allow-empty is invalid",
+			elem:    Element{Destination: DestTitle, Type: TypeSelect, Options: []string{"a"}, IncludeEmpty: boolPtr(true)},
+			wantErr: true,
+		},
+		{
+			name:    "include-empty true with allow-empty false is invalid",
+			elem:    Element{Destination: DestTitle, Type: TypeSelect, Options: []string{"a"}, AllowEmpty: boolPtr(false), IncludeEmpty: boolPtr(true)},
+			wantErr: true,
+		},
+		{
+			name:    "include-empty false without allow-empty is valid",
+			elem:    Element{Destination: DestTitle, Type: TypeSelect, Options: []string{"a"}, IncludeEmpty: boolPtr(false)},
+			wantErr: false,
+		},
+		{
+			name:    "include-empty not set is valid",
+			elem:    Element{Destination: DestTitle, Type: TypeSelect, Options: []string{"a"}, AllowEmpty: boolPtr(true)},
+			wantErr: false,
+		},
+
 		// Select type
 		{
 			name:    "valid select element",
@@ -652,6 +679,49 @@ func TestValidateFormat(t *testing.T) {
 			err := validateFormat(tt.elem)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("validateFormat() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateIncludeEmpty(t *testing.T) {
+	tests := []struct {
+		name    string
+		elem    Element
+		wantErr bool
+	}{
+		{
+			name:    "include-empty nil is valid",
+			elem:    Element{},
+			wantErr: false,
+		},
+		{
+			name:    "include-empty false is valid",
+			elem:    Element{IncludeEmpty: boolPtr(false)},
+			wantErr: false,
+		},
+		{
+			name:    "include-empty true with allow-empty true is valid",
+			elem:    Element{AllowEmpty: boolPtr(true), IncludeEmpty: boolPtr(true)},
+			wantErr: false,
+		},
+		{
+			name:    "include-empty true without allow-empty is invalid",
+			elem:    Element{IncludeEmpty: boolPtr(true)},
+			wantErr: true,
+		},
+		{
+			name:    "include-empty true with allow-empty false is invalid",
+			elem:    Element{AllowEmpty: boolPtr(false), IncludeEmpty: boolPtr(true)},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateIncludeEmpty(tt.elem)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateIncludeEmpty() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

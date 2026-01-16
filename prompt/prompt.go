@@ -31,8 +31,8 @@ func ProcessElements(cfg *config.Config, oldCommitMessage *string) (*Result, err
 			return nil, err
 		}
 
-		// Skip if value is empty
-		if value == "" {
+		// Skip if value is empty (unless include-empty is set)
+		if value == "" && !elem.IsIncludeEmpty() {
 			continue
 		}
 
