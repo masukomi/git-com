@@ -1,0 +1,13 @@
+skip_output:
+  - meta
+  - skips
+pre-commit:
+  parallel: true
+  scripts:
+    "bad_words":
+      exclude: "Gemfile|Gemfile.lock"
+      runner: bash
+      tags: bad_words
+    "go_tester":
+      runner: bash
+      tags: testing
