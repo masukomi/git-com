@@ -54,7 +54,7 @@ ticket-number:
     destination: body
     data-type: integer
     allow-empty: true
-    before-string: "\n\nTicket: "
+    before-string: "\nTicket: "
     instructions: "Associated Ticket Number (if any)"
 meta_element_changelog:
     display_aliases:
