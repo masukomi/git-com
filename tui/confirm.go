@@ -94,7 +94,7 @@ func (m confirmModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.Quit):
-			m.confirmation = false
+			m.aborted = true
 			m.quitting = true
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.Negative):
