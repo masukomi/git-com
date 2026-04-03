@@ -2,6 +2,7 @@ package commit
 
 import (
 	"errors"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -24,22 +25,24 @@ func HasStagedFiles() (bool, error) {
 
 // CreateCommit creates a git commit with the given title and body
 func CreateCommit(title, body string) error {
-	message := buildCommitMessage(title, body)
-	cmd := exec.Command("git", "commit", "-m", message)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return errors.New(strings.TrimSpace(string(output)))
-	}
-	return nil
+	return runCommit("git", "commit", "-m", buildCommitMessage(title, body))
 }
 
 // AmendCommit amends the last commit with a new message
 func AmendCommit(title, body string) error {
-	message := buildCommitMessage(title, body)
-	cmd := exec.Command("git", "commit", "--amend", "-m", message)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return errors.New(strings.TrimSpace(string(output)))
+	return runCommit("git", "commit", "--amend", "-m", buildCommitMessage(title, body))
+}
+
+// runCommit runs a git commit command, streaming output directly to the terminal
+// so that hook output (e.g. rubocop, linters) is visible in real time.
+func runCommit(name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		// Hook output has already been streamed; return a minimal error so the
+		// caller knows the commit failed without double-printing the details.
+		return errors.New("commit failed")
 	}
 	return nil
 }

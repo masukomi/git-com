@@ -106,12 +106,10 @@ func hasMultilineTextBodyElement(cfg *config.Config) bool {
 func commitOrAmend(creatingNewCommit bool, result *prompt.Result) {
 	if creatingNewCommit {
 		if err := commit.CreateCommit(result.Title, result.Body); err != nil {
-			output.PrintError("Error creating commit: " + err.Error())
 			os.Exit(1)
 		}
 	} else {
 		if err := commit.AmendCommit(result.Title, result.Body); err != nil {
-			output.PrintError("Error amending commit: " + err.Error())
 			os.Exit(1)
 		}
 	}
