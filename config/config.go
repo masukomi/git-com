@@ -103,6 +103,7 @@ func parseOrderedYAML(data []byte) ([]Element, []MetaElement, error) {
 			return nil, nil, err
 		}
 		elem.Name = keyNode.Value
+		elem.RawNode = valueNode
 		elements = append(elements, elem)
 	}
 
@@ -135,15 +136,16 @@ func SaveConfig(cfg *Config) error {
 		keyNode.Value = elem.Name
 		keyNode.Tag = "!!str"
 
-		// Create element map for value
-		elemMap := elementToMap(elem)
-
-		var valueNode yaml.Node
-		if err := valueNode.Encode(elemMap); err != nil {
-			return err
+		valueNode := elem.RawNode
+		if valueNode == nil {
+			// No raw node (element built programmatically) — build from map.
+			var vn yaml.Node
+			if err := vn.Encode(elementToMap(elem)); err != nil {
+				return err
+			}
+			valueNode = &vn
 		}
-
-		mapNode.Content = append(mapNode.Content, &keyNode, &valueNode)
+		mapNode.Content = append(mapNode.Content, &keyNode, valueNode)
 	}
 
 	// Preserve meta elements at the end
@@ -166,13 +168,11 @@ func SaveConfig(cfg *Config) error {
 	return os.WriteFile(cfg.FilePath, data, 0644)
 }
 
-// elementToMap converts an Element to a map for YAML serialization
-// This ensures we only include non-empty/non-default values
+// elementToMap converts an Element to a map for YAML serialization.
+// Used as a fallback when RawNode is nil (programmatically constructed elements).
 func elementToMap(elem Element) map[string]interface{} {
 	m := make(map[string]interface{})
-
 	m["destination"] = string(elem.Destination)
-
 	addStringIfNotEmpty(m, "type", string(elem.Type))
 	addStringIfNotEmpty(m, "instructions", elem.Instructions)
 	addStringIfNotEmpty(m, "before-string", elem.BeforeString)
@@ -188,7 +188,6 @@ func elementToMap(elem Element) map[string]interface{} {
 	addStringIfNotEmpty(m, "join-string", elem.JoinString)
 	addIntIfNotZero(m, "limit", elem.Limit)
 	addStringIfNotEmpty(m, "empty-selection-text", elem.EmptySelectionText)
-
 	return m
 }
 
@@ -221,8 +220,33 @@ func (c *Config) AddOptionToElement(elementName, newOption string) error {
 	for i, elem := range c.Elements {
 		if elem.Name == elementName {
 			c.Elements[i].Options = append(c.Elements[i].Options, newOption)
+			if c.Elements[i].RawNode != nil {
+				appendOptionToNode(c.Elements[i].RawNode, newOption)
+			}
 			return SaveConfig(c)
 		}
 	}
 	return errors.New("element not found")
+}
+
+// appendOptionToNode adds a new option value to the options sequence in a raw yaml.Node,
+// preserving the original key order of the element.
+func appendOptionToNode(node *yaml.Node, newOption string) {
+	for i := 0; i < len(node.Content)-1; i += 2 {
+		if node.Content[i].Value == "options" {
+			node.Content[i+1].Content = append(node.Content[i+1].Content, &yaml.Node{
+				Kind:  yaml.ScalarNode,
+				Value: newOption,
+				Tag:   "!!str",
+			})
+			return
+		}
+	}
+	// options key not present yet — create it
+	node.Content = append(node.Content,
+		&yaml.Node{Kind: yaml.ScalarNode, Value: "options", Tag: "!!str"},
+		&yaml.Node{Kind: yaml.SequenceNode, Content: []*yaml.Node{
+			{Kind: yaml.ScalarNode, Value: newOption, Tag: "!!str"},
+		}},
+	)
 }

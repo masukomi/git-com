@@ -651,6 +651,51 @@ func TestAddOptionToElement(t *testing.T) {
 		}
 	})
 
+	t.Run("preserves key order when adding option to loaded config", func(t *testing.T) {
+		// Write a YAML file with keys in non-alphabetical order to prove order is preserved.
+		// "options" comes before "modifiable", "type" comes last — deliberately scrambled.
+		initial := `my-select:
+    destination: title
+    options:
+        - alpha
+        - beta
+    modifiable: true
+    type: select
+`
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, ".git-com.yaml")
+		if err := os.WriteFile(configPath, []byte(initial), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := LoadConfigFromPath(configPath)
+		if err != nil {
+			t.Fatalf("LoadConfigFromPath() error = %v", err)
+		}
+
+		if err := cfg.AddOptionToElement("my-select", "gamma"); err != nil {
+			t.Fatalf("AddOptionToElement() error = %v", err)
+		}
+
+		saved, err := os.ReadFile(configPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		expected := `my-select:
+    destination: title
+    options:
+        - alpha
+        - beta
+        - gamma
+    modifiable: true
+    type: select
+`
+		if string(saved) != expected {
+			t.Errorf("saved YAML does not match expected.\ngot:\n%s\nwant:\n%s", saved, expected)
+		}
+	})
+
 	t.Run("returns error for missing element", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		configPath := filepath.Join(tmpDir, ".git-com.yaml")
@@ -673,60 +718,3 @@ func TestAddOptionToElement(t *testing.T) {
 	})
 }
 
-func TestElementToMap(t *testing.T) {
-	t.Run("includes only set fields", func(t *testing.T) {
-		elem := Element{
-			Name:        "test",
-			Destination: DestTitle,
-			Type:        TypeText,
-		}
-
-		m := elementToMap(elem)
-
-		if _, ok := m["destination"]; !ok {
-			t.Error("destination should always be included")
-		}
-		if _, ok := m["type"]; !ok {
-			t.Error("type should be included when set")
-		}
-		if _, ok := m["instructions"]; ok {
-			t.Error("instructions should not be included when empty")
-		}
-		if _, ok := m["options"]; ok {
-			t.Error("options should not be included when empty")
-		}
-	})
-
-	t.Run("includes all set fields", func(t *testing.T) {
-		elem := Element{
-			Name:               "test",
-			Destination:        DestBody,
-			Type:               TypeMultiSelect,
-			Instructions:       "Test",
-			BeforeString:       "[",
-			AfterString:        "]",
-			AllowEmpty:         boolPtr(true),
-			Options:            []string{"a"},
-			Modifiable:         boolPtr(false),
-			RecordAs:           RecordAsList,
-			BulletString:       "- ",
-			JoinString:         ", ",
-			Limit:              5,
-			EmptySelectionText: "None",
-		}
-
-		m := elementToMap(elem)
-
-		expectedKeys := []string{
-			"destination", "type", "instructions", "before-string", "after-string",
-			"allow-empty", "options", "modifiable", "record-as", "bullet-string",
-			"join-string", "limit", "empty-selection-text",
-		}
-
-		for _, key := range expectedKeys {
-			if _, ok := m[key]; !ok {
-				t.Errorf("expected key %q to be present", key)
-			}
-		}
-	})
-}

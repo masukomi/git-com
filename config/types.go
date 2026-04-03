@@ -50,7 +50,8 @@ const (
 
 // Element represents a single YAML element configuration
 type Element struct {
-	Name        string      // The top-level key name (populated during parsing)
+	Name        string      `yaml:"-"` // The top-level key name (populated during parsing)
+	RawNode     *yaml.Node  `yaml:"-"` // preserved original node for order-safe saving
 	Destination Destination `yaml:"destination"`
 	Type        ElementType `yaml:"type"`
 
