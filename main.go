@@ -57,6 +57,12 @@ func main() {
 	// Check if there are staged files (only for new commits, not amends)
 	if creatingNewCommit {
 		verifyStagedFiles()
+
+		if result := offerPendingCommit(); result != nil {
+			performFinalConfirmation(result)
+			commitOrAmend(creatingNewCommit, result)
+			os.Exit(0)
+		}
 	}
 
 	// Process all elements
@@ -104,15 +110,53 @@ func hasMultilineTextBodyElement(cfg *config.Config) bool {
 
 // Create or amend the commit based on what the user indicated at launch.
 func commitOrAmend(creatingNewCommit bool, result *prompt.Result) {
-	if creatingNewCommit {
-		if err := commit.CreateCommit(result.Title, result.Body); err != nil {
-			os.Exit(1)
-		}
-	} else {
-		if err := commit.AmendCommit(result.Title, result.Body); err != nil {
-			os.Exit(1)
-		}
+	// Save before attempting so the message survives a hook failure.
+	if err := commit.SavePendingCommit(result.Title, result.Body); err != nil {
+		output.PrintWarning("Could not save pending commit message: " + err.Error())
 	}
+
+	var commitErr error
+	if creatingNewCommit {
+		commitErr = commit.CreateCommit(result.Title, result.Body)
+	} else {
+		commitErr = commit.AmendCommit(result.Title, result.Body)
+	}
+
+	if commitErr != nil {
+		os.Exit(1) // pending file remains for next run
+	}
+
+	_ = commit.DeletePendingCommit() // success — clean up
+}
+
+// offerPendingCommit checks for a saved commit message from a previous failed attempt.
+// If found, shows the title and asks the user whether to reuse it.
+// Returns a Result to jump straight to confirmation, or nil to proceed normally.
+func offerPendingCommit() *prompt.Result {
+	title, body, found, err := commit.LoadPendingCommit()
+	if err != nil || !found {
+		return nil
+	}
+
+	fmt.Fprintln(os.Stderr, "You have a pending commit message from a previous attempt:")
+	fmt.Fprintf(os.Stderr, "  %s\n\n", title)
+
+	useIt, err := tui.Confirm("Use this message?")
+	if err != nil {
+		if errors.Is(err, tui.ErrAborted) {
+			os.Exit(1)
+		}
+		return nil
+	}
+
+	if !useIt {
+		_ = commit.DeletePendingCommit()
+		return nil
+	}
+
+	// Don't delete here — commitOrAmend will overwrite with the final
+	// (possibly edited) version before committing, then delete on success.
+	return &prompt.Result{Title: title, Body: body}
 }
 
 // tests if there are any commits.
