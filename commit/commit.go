@@ -19,28 +19,19 @@ func openRepository() (*git.Repository, error) {
 
 // HasStagedFiles checks if there are any staged files in the repository
 func HasStagedFiles() (bool, error) {
-	repo, err := openRepository()
+	// git diff --cached --quiet exits 0 if no staged changes, 1 if there are staged changes.
+	// This is much faster than go-git's Worktree.Status() which walks the entire working tree.
+	cmd := exec.Command("git", "diff", "--cached", "--quiet")
+	err := cmd.Run()
 	if err != nil {
-		return false, err
-	}
-
-	wt, err := repo.Worktree()
-	if err != nil {
-		return false, err
-	}
-
-	status, err := wt.Status()
-	if err != nil {
-		return false, err
-	}
-
-	for _, s := range status {
-		// Check if file has staged changes (Added, Modified, Deleted, Renamed, Copied)
-		if s.Staging != git.Unmodified && s.Staging != git.Untracked {
-			return true, nil
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			// Exit code 1 means there are staged changes
+			if exitErr.ExitCode() == 1 {
+				return true, nil
+			}
 		}
+		return false, err
 	}
-
 	return false, nil
 }
 
