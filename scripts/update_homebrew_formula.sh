@@ -39,7 +39,7 @@ if [[ $? -ne 0 ]]; then
     echo "There's no release for tag $TAG on GitHub"
     # 🤔 is there a tag?
     GH_REMOTE=$(git remote -vv | grep --color=none "github\.com" | sed '/(fetch)/d'| awk '{print $1}')
-    if [ remote_has_tag $GH_REMOTE $TAG ]; then
+    if remote_has_tag "$GH_REMOTE" "$TAG"; then
         echo "GitHub has that tag"
     else
         # sanity check we even have the tag locally
