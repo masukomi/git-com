@@ -11,3 +11,11 @@ pre-commit:
     "go_tester":
       runner: bash
       tags: testing
+    # always_fails is here for testing
+    # failure of pre-commit hooks
+    # and git-com's ability to store
+    # and retrieve commit messages
+    # EX_TEMPFAIL (75)
+    # "always_fails":
+    #   run: bash -c "echo 'testing failing pre-commit'; exit 75"
+    #   tags: testing
