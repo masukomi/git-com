@@ -2,3 +2,4 @@ instructions*
 git-com
 *.fold
 *.bak
+lib/.precomp/*
