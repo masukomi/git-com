@@ -1,6 +1,6 @@
 ---
 name: git-com-structured-commits
-description: Use when about to make a git commit or run git commit/git commit --amend. Checks whether git-com is installed and a .git-com.yaml config exists, then creates a structured commit using git-com instead of plain git commit. Trigger phrases: "commit", "commit changes", "make a commit", "git commit", "commit my work", "commit these changes".
+description: 'Use when about to make a git commit or run git commit/git commit --amend. Checks whether git-com is installed and a .git-com.yaml config exists, then creates a structured commit using git-com instead of plain git commit. Trigger phrases: "commit", "commit changes", "make a commit", "git commit", "commit my work", "commit these changes".'
 ---
 
 ## When to Use This Skill
@@ -24,11 +24,10 @@ which git-com
 If this fails, use `git commit` normally and stop.
 
 ```bash
-git rev-parse --show-toplevel
+ls "$(git rev-parse --show-toplevel)"/.git-com.y*ml >/dev/null 2>&1
 ```
 
-Check that directory for `.git-com.yaml` or `.git-com.yml`. If neither exists, use
-`git commit` normally and stop.
+If this returns a non-zero exit code, use `git commit` normally and stop.
 
 ### 2. Get the commit schema
 
