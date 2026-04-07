@@ -101,3 +101,72 @@ This works because Git looks for executables named =git-<command>= when you type
 ** Aborting
 Press =Ctrl+C= or =Esc= at any prompt to abort without creating a commit.
 
+** Agent Flags (for automated use)
+These flags are intended for use by AI agents and scripts, not humans. If you are a human, use =git com= interactively instead.
+
+- =--dump-instructions= :: Prints a YAML document describing the commit schema — element names, types, options, and requirements — then exits. Agents use this to learn what a valid answers file should contain.
+- =--answers <path>= :: Reads a YAML answers file and creates the commit non-interactively, skipping all TUI prompts. The answers file must contain one key per element from the =--dump-instructions= output.
+- =--amend= :: Amends the last commit instead of creating a new one. Can be combined with =--answers= for non-interactive amends: =git-com --amend --answers /path/to/answers.yaml=.
+
+* Teaching Agents To Use git-com
+
+AI coding agents (such as Claude Code) will typically run =git commit= directly, bypassing git-com entirely. The =git-com-structured-commits= skill teaches agents to detect git-com and use it instead.
+
+** Installing the Skill
+
+The skill lives in the =skills/git-com-structured-commits/= directory of this repository. Copy it to your Claude Code skills directory:
+
+#+begin_src bash
+cp -r skills/git-com-structured-commits ~/.claude/skills/
+#+end_src
+
+*** Global vs. Per-Project Installation
+
+If you use git-com across most of your repositories, install the skill globally by adding a line to =~/.claude/CLAUDE.md= (create the file if it doesn't exist):
+
+#+begin_src
+When making git commits, use the git-com-structured-commits skill if git-com is available.
+#+end_src
+
+This tells any Claude Code agent in any repo to check for git-com before committing. For repos where you only want this behaviour sometimes, add the same line to that repo's =CLAUDE.md= instead.
+
+** How It Works
+
+When an agent is about to commit, the skill instructs it to:
+
+1. Check that =git-com= is in PATH and a =.git-com.yaml= (or =.git-com.yml=) exists in the repo root. If either is missing, fall back to =git commit= normally.
+2. Run =git-com --dump-instructions= to get a YAML description of every element — its type, whether it is required, valid options, and any hints.
+3. Create a temporary answers YAML file with one key per element, filled in based on the agent's knowledge of the changes being committed.
+4. Run =git-com --answers /path/to/answers.yaml= to create the commit.
+5. Delete the temporary answers file on success.
+
+** Guiding Agent Behaviour with =agent-hint=
+
+Every element in your =.git-com.yaml= can include an optional =agent-hint= key. Agents are instructed to follow it when filling in their answer for that element. Use it to provide guidance that would otherwise only exist in your head.
+
+#+begin_src yaml
+commit-title:
+    type: text
+    destination: title
+    placeholder: Commit Title
+    agent-hint: "Use imperative mood. Reference the ticket number if one is provided."
+
+commit-description:
+    type: multiline-text
+    destination: body
+    allow-empty: true
+    instructions: Please describe your changes.
+    agent-hint: "Explain the why, not just the what. Mention any trade-offs or alternatives considered."
+
+change-type:
+    type: select
+    destination: title
+    options:
+        - fix
+        - add
+        - refactor
+    agent-hint: "Use 'fix' only for bug corrections. Use 'add' for new features or files. Use 'refactor' for restructuring without behaviour change."
+#+end_src
+
+If no =agent-hint= is provided, git-com automatically adds a character-length hint for =text= elements based on their destination (title vs. body).
+
