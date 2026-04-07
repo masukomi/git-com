@@ -1,6 +1,6 @@
 package config
 
-import "gopkg.in/yaml.v3"
+import "github.com/goccy/go-yaml"
 
 // ElementType represents the type of input element
 type ElementType string
@@ -51,7 +51,6 @@ const (
 // Element represents a single YAML element configuration
 type Element struct {
 	Name        string      `yaml:"-"` // The top-level key name (populated during parsing)
-	RawNode     *yaml.Node  `yaml:"-"` // preserved original node for order-safe saving
 	Destination Destination `yaml:"destination"`
 	Type        ElementType `yaml:"type"`
 
@@ -83,10 +82,10 @@ type Element struct {
 // but preserves for third-party tools
 const MetaElementPrefix = "meta_element_"
 
-// MetaElement stores a raw meta element for preservation during save
+// MetaElement stores a raw meta element value for preservation during save
 type MetaElement struct {
-	Name string
-	Node *yaml.Node
+	Name  string
+	Value interface{} // raw YAML value (yaml.MapSlice for maps)
 }
 
 // Config holds the ordered list of elements parsed from YAML
@@ -94,6 +93,7 @@ type Config struct {
 	Elements     []Element
 	MetaElements []MetaElement // Meta elements preserved for third-party tools
 	FilePath     string        // Path to the config file for saving modifications
+	comments     yaml.CommentMap // preserved for round-trip comment preservation
 }
 
 // IsAllowEmpty returns true if empty input is allowed

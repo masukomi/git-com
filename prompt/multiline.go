@@ -5,7 +5,8 @@ import (
 
 	"git-com/config"
 	"git-com/output"
-	"git-com/tui"
+
+	gummies "github.com/masukomi/gummies"
 )
 
 const (
@@ -22,7 +23,7 @@ func HandleMultilineText(elem config.Element, initialContent *string) (string, e
 
 	for {
 		// Get multiline text input
-		result, err := tui.Write(placeholder, elem.Instructions, initialContent)
+		result, err := gummies.Write(placeholder, elem.Instructions, initialContent)
 		if err != nil {
 			if isAbortError(err) {
 				return "", ErrUserAborted

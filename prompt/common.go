@@ -7,7 +7,8 @@ import (
 
 	"git-com/config"
 	"git-com/output"
-	"git-com/tui"
+
+	gummies "github.com/masukomi/gummies"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -35,12 +36,12 @@ func ClearScreen() {
 
 // isAbortError checks if the error is an abort error from tui
 func isAbortError(err error) bool {
-	return errors.Is(err, tui.ErrAborted)
+	return errors.Is(err, gummies.ErrAborted)
 }
 
 // handleOtherSelection handles when user selects "Other…" to add a new item
 func handleOtherSelection(elementName string, cfg *config.Config) (string, error) {
-	result, err := tui.Input("Enter new option…", "Add & select a new item")
+	result, err := gummies.Input("Enter new option…", "Add & select a new item")
 	if err != nil {
 		if isAbortError(err) {
 			return "", ErrUserAborted

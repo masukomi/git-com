@@ -3,3 +3,4 @@ git-com
 *.fold
 *.bak
 lib/.precomp/*
+.idea/*

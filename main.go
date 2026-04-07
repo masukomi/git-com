@@ -10,7 +10,8 @@ import (
 	"git-com/config"
 	"git-com/output"
 	"git-com/prompt"
-	"git-com/tui"
+
+	gummies "github.com/masukomi/gummies"
 )
 
 func main() {
@@ -141,9 +142,9 @@ func offerPendingCommit() *prompt.Result {
 	fmt.Fprintln(os.Stderr, "You have a pending commit message from a previous attempt:")
 	fmt.Fprintf(os.Stderr, "  %s\n\n", title)
 
-	useIt, err := tui.Confirm("Use this message?")
+	useIt, err := gummies.Confirm("Use this message?")
 	if err != nil {
-		if errors.Is(err, tui.ErrAborted) {
+		if errors.Is(err, gummies.ErrAborted) {
 			os.Exit(1)
 		}
 		return nil
@@ -205,9 +206,9 @@ func performFinalConfirmation(result *prompt.Result) {
 		fmt.Fprintln(os.Stderr)
 
 		// Confirm
-		confirmed, err := tui.Confirm("Is this good?")
+		confirmed, err := gummies.Confirm("Is this good?")
 		if err != nil {
-			if errors.Is(err, tui.ErrAborted) {
+			if errors.Is(err, gummies.ErrAborted) {
 				os.Exit(1)
 			}
 			output.PrintError("Error during confirmation: " + err.Error())
@@ -220,9 +221,9 @@ func performFinalConfirmation(result *prompt.Result) {
 
 		// Edit title
 		prompt.ClearScreen()
-		newTitle, err := tui.InputWithValue("", "Edit Title", &result.Title)
+		newTitle, err := gummies.InputWithValue("", "Edit Title", &result.Title)
 		if err != nil {
-			if errors.Is(err, tui.ErrAborted) {
+			if errors.Is(err, gummies.ErrAborted) {
 				os.Exit(1)
 			}
 			output.PrintError("Error editing title: " + err.Error())
@@ -231,9 +232,9 @@ func performFinalConfirmation(result *prompt.Result) {
 		result.Title = newTitle
 
 		// Edit body
-		newBody, err := tui.Write("", "Edit Description", &result.Body)
+		newBody, err := gummies.Write("", "Edit Description", &result.Body)
 		if err != nil {
-			if errors.Is(err, tui.ErrAborted) {
+			if errors.Is(err, gummies.ErrAborted) {
 				os.Exit(1)
 			}
 			output.PrintError("Error editing description: " + err.Error())

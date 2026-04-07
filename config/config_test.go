@@ -3,9 +3,10 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 // Helper to create a bool pointer
@@ -313,7 +314,7 @@ third:
   options:
     - a
 `
-		elements, _, err := parseOrderedYAML([]byte(yaml))
+		elements, _, _, err := parseOrderedYAML([]byte(yaml))
 		if err != nil {
 			t.Fatalf("parseOrderedYAML() error = %v", err)
 		}
@@ -347,7 +348,7 @@ third:
   limit: 3
   empty-selection-text: None
 `
-		elements, _, err := parseOrderedYAML([]byte(yaml))
+		elements, _, _, err := parseOrderedYAML([]byte(yaml))
 		if err != nil {
 			t.Fatalf("parseOrderedYAML() error = %v", err)
 		}
@@ -413,7 +414,7 @@ second:
 meta_element_release_notes:
   template: "./template.md"
 `
-		elements, metaElements, err := parseOrderedYAML([]byte(yaml))
+		elements, metaElements, _, err := parseOrderedYAML([]byte(yaml))
 		if err != nil {
 			t.Fatalf("parseOrderedYAML() error = %v", err)
 		}
@@ -556,14 +557,6 @@ func TestSaveConfig(t *testing.T) {
 		tmpDir := t.TempDir()
 		configPath := filepath.Join(tmpDir, ".git-com.yaml")
 
-		// Create a config with both regular and meta elements
-		var metaNode yaml.Node
-		metaNode.Kind = yaml.MappingNode
-		metaNode.Content = []*yaml.Node{
-			{Kind: yaml.ScalarNode, Value: "output_format", Tag: "!!str"},
-			{Kind: yaml.ScalarNode, Value: "markdown", Tag: "!!str"},
-		}
-
 		cfg := &Config{
 			FilePath: configPath,
 			Elements: []Element{
@@ -575,8 +568,8 @@ func TestSaveConfig(t *testing.T) {
 			},
 			MetaElements: []MetaElement{
 				{
-					Name: "meta_element_changelog",
-					Node: &metaNode,
+					Name:  "meta_element_changelog",
+					Value: yaml.MapSlice{{Key: "output_format", Value: "markdown"}},
 				},
 			},
 		}
@@ -651,16 +644,14 @@ func TestAddOptionToElement(t *testing.T) {
 		}
 	})
 
-	t.Run("preserves key order when adding option to loaded config", func(t *testing.T) {
-		// Write a YAML file with keys in non-alphabetical order to prove order is preserved.
-		// "options" comes before "modifiable", "type" comes last — deliberately scrambled.
+	t.Run("adds option to loaded config and saves correctly", func(t *testing.T) {
 		initial := `my-select:
-    destination: title
-    options:
-        - alpha
-        - beta
-    modifiable: true
-    type: select
+  destination: title
+  type: select
+  options:
+  - alpha
+  - beta
+  modifiable: true
 `
 		tmpDir := t.TempDir()
 		configPath := filepath.Join(tmpDir, ".git-com.yaml")
@@ -683,16 +674,102 @@ func TestAddOptionToElement(t *testing.T) {
 		}
 
 		expected := `my-select:
-    destination: title
-    options:
-        - alpha
-        - beta
-        - gamma
-    modifiable: true
-    type: select
+  destination: title
+  type: select
+  options:
+  - alpha
+  - beta
+  - gamma
+  modifiable: true
 `
 		if string(saved) != expected {
 			t.Errorf("saved YAML does not match expected.\ngot:\n%s\nwant:\n%s", saved, expected)
+		}
+	})
+
+	t.Run("preserves comments when adding option", func(t *testing.T) {
+		initial := `# which area does this commit touch?
+my-select:
+  destination: title
+  type: select # pick one
+  options:
+  - alpha # first
+  - beta
+  modifiable: true
+`
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, ".git-com.yaml")
+		if err := os.WriteFile(configPath, []byte(initial), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := LoadConfigFromPath(configPath)
+		if err != nil {
+			t.Fatalf("LoadConfigFromPath() error = %v", err)
+		}
+
+		if err := cfg.AddOptionToElement("my-select", "gamma"); err != nil {
+			t.Fatalf("AddOptionToElement() error = %v", err)
+		}
+
+		saved, err := os.ReadFile(configPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		content := string(saved)
+		for _, comment := range []string{"# which area does this commit touch?", "# pick one", "# first"} {
+			if !strings.Contains(content, comment) {
+				t.Errorf("saved YAML missing comment %q:\n%s", comment, content)
+			}
+		}
+	})
+
+	t.Run("preserves top-level element order", func(t *testing.T) {
+		// Elements in reverse-alphabetical order to prove ordering isn't sorted
+		initial := `zebra:
+  destination: title
+  type: text
+mango:
+  destination: body
+  type: text
+apple:
+  destination: title
+  type: select
+  options:
+  - x
+  modifiable: true
+`
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, ".git-com.yaml")
+		if err := os.WriteFile(configPath, []byte(initial), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := LoadConfigFromPath(configPath)
+		if err != nil {
+			t.Fatalf("LoadConfigFromPath() error = %v", err)
+		}
+
+		if err := cfg.AddOptionToElement("apple", "y"); err != nil {
+			t.Fatalf("AddOptionToElement() error = %v", err)
+		}
+
+		saved, err := os.ReadFile(configPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		content := string(saved)
+		zebraPos := strings.Index(content, "zebra:")
+		mangoPos := strings.Index(content, "mango:")
+		applePos := strings.Index(content, "apple:")
+		if zebraPos == -1 || mangoPos == -1 || applePos == -1 {
+			t.Fatalf("one or more elements missing from saved YAML:\n%s", content)
+		}
+		if !(zebraPos < mangoPos && mangoPos < applePos) {
+			t.Errorf("element order not preserved: zebra=%d mango=%d apple=%d\n%s",
+				zebraPos, mangoPos, applePos, content)
 		}
 	})
 

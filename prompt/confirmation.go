@@ -2,7 +2,8 @@ package prompt
 
 import (
 	"git-com/config"
-	"git-com/tui"
+
+	gummies "github.com/masukomi/gummies"
 )
 
 // HandleConfirmation processes a confirmation element
@@ -13,7 +14,7 @@ func HandleConfirmation(elem config.Element) (string, error) {
 		prompt = elem.Instructions
 	}
 
-	confirmed, err := tui.Confirm(prompt)
+	confirmed, err := gummies.Confirm(prompt)
 	if err != nil {
 		if isAbortError(err) {
 			return "", ErrUserAborted

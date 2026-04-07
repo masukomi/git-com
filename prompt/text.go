@@ -6,7 +6,8 @@ import (
 
 	"git-com/config"
 	"git-com/output"
-	"git-com/tui"
+
+	gummies "github.com/masukomi/gummies"
 )
 
 var (
@@ -18,7 +19,7 @@ var (
 func HandleText(elem config.Element) (string, error) {
 	for {
 		// Get text input
-		result, err := tui.Input(elem.Placeholder, elem.Instructions)
+		result, err := gummies.Input(elem.Placeholder, elem.Instructions)
 		if err != nil {
 			if isAbortError(err) {
 				return "", ErrUserAborted

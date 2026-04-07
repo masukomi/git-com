@@ -3,7 +3,7 @@ package prompt
 import (
 	"git-com/config"
 	"git-com/output"
-	"git-com/tui"
+	gummies "github.com/masukomi/gummies"
 )
 
 // HandleSelect processes a select element
@@ -11,7 +11,7 @@ func HandleSelect(elem config.Element, cfg *config.Config) (string, error) {
 	options, emptyText := buildSelectOptions(elem)
 
 	for {
-		selected, err := tui.Choose(options, 1, elem.Instructions)
+		selected, err := gummies.Choose(options, 1, elem.Instructions)
 		if err != nil {
 			if isAbortError(err) {
 				return "", ErrUserAborted

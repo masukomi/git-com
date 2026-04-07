@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 var configFileNames = []string{".git-com.yaml", ".git-com.yml"}
@@ -49,7 +49,7 @@ func LoadConfigFromPath(path string) (*Config, error) {
 		return nil, err
 	}
 
-	elements, metaElements, err := parseOrderedYAML(data)
+	elements, metaElements, cm, err := parseOrderedYAML(data)
 	if err != nil {
 		return nil, err
 	}
@@ -58,56 +58,51 @@ func LoadConfigFromPath(path string) (*Config, error) {
 		Elements:     elements,
 		MetaElements: metaElements,
 		FilePath:     path,
+		comments:     cm,
 	}, nil
 }
 
-// parseOrderedYAML parses YAML while preserving the order of elements.
+// parseOrderedYAML parses YAML while preserving the order of top-level elements
+// and capturing comments for round-trip preservation.
 // Meta elements (keys starting with "meta_element_") are returned separately
 // and not processed as regular elements.
-func parseOrderedYAML(data []byte) ([]Element, []MetaElement, error) {
-	var node yaml.Node
-	if err := yaml.Unmarshal(data, &node); err != nil {
-		return nil, nil, err
+func parseOrderedYAML(data []byte) ([]Element, []MetaElement, yaml.CommentMap, error) {
+	cm := yaml.CommentMap{}
+	var ms yaml.MapSlice
+	if err := yaml.UnmarshalWithOptions(data, &ms, yaml.CommentToMap(cm), yaml.UseOrderedMap()); err != nil {
+		return nil, nil, nil, err
 	}
 
-	// Handle empty file
-	if len(node.Content) == 0 {
-		return nil, nil, nil
-	}
-
-	// node.Content[0] is the document root (a MappingNode)
-	docNode := node.Content[0]
-	if docNode.Kind != yaml.MappingNode {
-		return nil, nil, errors.New("expected a mapping at the root of the YAML")
-	}
-
-	// Content contains alternating key/value nodes
 	var elements []Element
 	var metaElements []MetaElement
-	content := docNode.Content
-	for i := 0; i < len(content); i += 2 {
-		keyNode := content[i]
-		valueNode := content[i+1]
 
-		// Skip meta elements but preserve them for later
-		if strings.HasPrefix(keyNode.Value, MetaElementPrefix) {
+	for _, item := range ms {
+		keyStr, ok := item.Key.(string)
+		if !ok {
+			continue
+		}
+
+		if strings.HasPrefix(keyStr, MetaElementPrefix) {
 			metaElements = append(metaElements, MetaElement{
-				Name: keyNode.Value,
-				Node: valueNode,
+				Name:  keyStr,
+				Value: item.Value,
 			})
 			continue
 		}
 
-		var elem Element
-		if err := valueNode.Decode(&elem); err != nil {
-			return nil, nil, err
+		valueBytes, err := yaml.Marshal(item.Value)
+		if err != nil {
+			return nil, nil, nil, err
 		}
-		elem.Name = keyNode.Value
-		elem.RawNode = valueNode
+		var elem Element
+		if err := yaml.Unmarshal(valueBytes, &elem); err != nil {
+			return nil, nil, nil, err
+		}
+		elem.Name = keyStr
 		elements = append(elements, elem)
 	}
 
-	return elements, metaElements, nil
+	return elements, metaElements, cm, nil
 }
 
 // findGitRoot finds the root directory of the current git repository
@@ -122,45 +117,15 @@ func findGitRoot() (string, error) {
 
 // SaveConfig saves the configuration back to the file
 func SaveConfig(cfg *Config) error {
-	// Build a map that preserves order using yaml.Node
-	var docNode yaml.Node
-	docNode.Kind = yaml.DocumentNode
-
-	var mapNode yaml.Node
-	mapNode.Kind = yaml.MappingNode
-
+	ms := yaml.MapSlice{}
 	for _, elem := range cfg.Elements {
-		// Add key node
-		var keyNode yaml.Node
-		keyNode.Kind = yaml.ScalarNode
-		keyNode.Value = elem.Name
-		keyNode.Tag = "!!str"
-
-		valueNode := elem.RawNode
-		if valueNode == nil {
-			// No raw node (element built programmatically) — build from map.
-			var vn yaml.Node
-			if err := vn.Encode(elementToMap(elem)); err != nil {
-				return err
-			}
-			valueNode = &vn
-		}
-		mapNode.Content = append(mapNode.Content, &keyNode, valueNode)
+		ms = append(ms, yaml.MapItem{Key: elem.Name, Value: elem})
 	}
-
-	// Preserve meta elements at the end
 	for _, meta := range cfg.MetaElements {
-		var keyNode yaml.Node
-		keyNode.Kind = yaml.ScalarNode
-		keyNode.Value = meta.Name
-		keyNode.Tag = "!!str"
-
-		mapNode.Content = append(mapNode.Content, &keyNode, meta.Node)
+		ms = append(ms, yaml.MapItem{Key: meta.Name, Value: meta.Value})
 	}
 
-	docNode.Content = append(docNode.Content, &mapNode)
-
-	data, err := yaml.Marshal(&docNode)
+	data, err := yaml.MarshalWithOptions(ms, yaml.WithComment(cfg.comments))
 	if err != nil {
 		return err
 	}
@@ -168,85 +133,13 @@ func SaveConfig(cfg *Config) error {
 	return os.WriteFile(cfg.FilePath, data, 0644)
 }
 
-// elementToMap converts an Element to a map for YAML serialization.
-// Used as a fallback when RawNode is nil (programmatically constructed elements).
-func elementToMap(elem Element) map[string]interface{} {
-	m := make(map[string]interface{})
-	m["destination"] = string(elem.Destination)
-	addStringIfNotEmpty(m, "type", string(elem.Type))
-	addStringIfNotEmpty(m, "instructions", elem.Instructions)
-	addStringIfNotEmpty(m, "before-string", elem.BeforeString)
-	addStringIfNotEmpty(m, "after-string", elem.AfterString)
-	addBoolIfNotNil(m, "allow-empty", elem.AllowEmpty)
-	addBoolIfNotNil(m, "include-empty", elem.IncludeEmpty)
-	addStringIfNotEmpty(m, "placeholder", elem.Placeholder)
-	addStringIfNotEmpty(m, "data-type", string(elem.DataType))
-	addOptionsIfNotEmpty(m, "options", elem.Options)
-	addBoolIfNotNil(m, "modifiable", elem.Modifiable)
-	addStringIfNotEmpty(m, "record-as", string(elem.RecordAs))
-	addStringIfNotEmpty(m, "bullet-string", elem.BulletString)
-	addStringIfNotEmpty(m, "join-string", elem.JoinString)
-	addIntIfNotZero(m, "limit", elem.Limit)
-	addStringIfNotEmpty(m, "empty-selection-text", elem.EmptySelectionText)
-	return m
-}
-
-func addStringIfNotEmpty(m map[string]interface{}, key, value string) {
-	if value != "" {
-		m[key] = value
-	}
-}
-
-func addBoolIfNotNil(m map[string]interface{}, key string, value *bool) {
-	if value != nil {
-		m[key] = *value
-	}
-}
-
-func addIntIfNotZero(m map[string]interface{}, key string, value int) {
-	if value != 0 {
-		m[key] = value
-	}
-}
-
-func addOptionsIfNotEmpty(m map[string]interface{}, key string, options []string) {
-	if len(options) > 0 {
-		m[key] = options
-	}
-}
-
 // AddOptionToElement adds a new option to an element's options list
 func (c *Config) AddOptionToElement(elementName, newOption string) error {
 	for i, elem := range c.Elements {
 		if elem.Name == elementName {
 			c.Elements[i].Options = append(c.Elements[i].Options, newOption)
-			if c.Elements[i].RawNode != nil {
-				appendOptionToNode(c.Elements[i].RawNode, newOption)
-			}
 			return SaveConfig(c)
 		}
 	}
 	return errors.New("element not found")
-}
-
-// appendOptionToNode adds a new option value to the options sequence in a raw yaml.Node,
-// preserving the original key order of the element.
-func appendOptionToNode(node *yaml.Node, newOption string) {
-	for i := 0; i < len(node.Content)-1; i += 2 {
-		if node.Content[i].Value == "options" {
-			node.Content[i+1].Content = append(node.Content[i+1].Content, &yaml.Node{
-				Kind:  yaml.ScalarNode,
-				Value: newOption,
-				Tag:   "!!str",
-			})
-			return
-		}
-	}
-	// options key not present yet — create it
-	node.Content = append(node.Content,
-		&yaml.Node{Kind: yaml.ScalarNode, Value: "options", Tag: "!!str"},
-		&yaml.Node{Kind: yaml.SequenceNode, Content: []*yaml.Node{
-			{Kind: yaml.ScalarNode, Value: newOption, Tag: "!!str"},
-		}},
-	)
 }

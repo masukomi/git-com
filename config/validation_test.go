@@ -533,7 +533,7 @@ func TestTypeInferenceFromDataType(t *testing.T) {
   data-type: integer
   allow-empty: true
 `
-	elements, _, err := parseOrderedYAML([]byte(yaml))
+	elements, _, _, err := parseOrderedYAML([]byte(yaml))
 	if err != nil {
 		t.Fatalf("parseOrderedYAML() error = %v", err)
 	}

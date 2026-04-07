@@ -6,7 +6,7 @@ import (
 
 	"git-com/config"
 	"git-com/output"
-	"git-com/tui"
+	gummies "github.com/masukomi/gummies"
 )
 
 // HandleMultiSelect processes a multi-select element
@@ -15,7 +15,7 @@ func HandleMultiSelect(elem config.Element, cfg *config.Config) (string, error) 
 	limit := getMultiSelectLimit(elem)
 
 	for {
-		selections, err := tui.Choose(options, limit, elem.Instructions)
+		selections, err := gummies.Choose(options, limit, elem.Instructions)
 		if err != nil {
 			if isAbortError(err) {
 				return "", ErrUserAborted

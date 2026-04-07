@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
-if test -e *.go; then
+files=(*.go)
+if (( ${#files[@]} > 0 )); then
   go test ./...
 fi
