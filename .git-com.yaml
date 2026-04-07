@@ -34,7 +34,7 @@ code-sections:
     type: multi-select
     record-as: joined-string
     allow-empty: true
-    before-string: "\nCode Sections: "
+    before-string: "\n\nCode Sections: "
     after-string: "\n"
     destination: body
     instructions: Which section(s) of the codebase?
@@ -49,6 +49,7 @@ code-sections:
         - config
         - meta
         - tests
+        - agentic
 ticket-number:
     type: text
     destination: body

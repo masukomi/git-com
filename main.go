@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"git-com/agent"
 	"git-com/commit"
 	"git-com/config"
 	"git-com/output"
@@ -17,6 +18,8 @@ import (
 func main() {
 	// Parse command-line flags
 	amendFlag := flag.Bool("amend", false, "Amend the last commit")
+	dumpInstructionsFlag := flag.Bool("dump-instructions", false, "Output agent instructions YAML and exit")
+	answersFlag := flag.String("answers", "", "Path to answers YAML file for non-interactive mode")
 	flag.Parse()
 
 	// Load configuration from git root
@@ -35,6 +38,17 @@ func main() {
 	// Validate configuration
 	if !config.ValidateConfig(cfg) {
 		os.Exit(1)
+	}
+
+	// Agent: dump instructions and exit (works even with no staged files)
+	if *dumpInstructionsFlag {
+		instructions, err := agent.DumpInstructions(cfg)
+		if err != nil {
+			output.PrintError("Error generating instructions: " + err.Error())
+			os.Exit(1)
+		}
+		fmt.Print(string(instructions))
+		os.Exit(0)
 	}
 
 	// Determine if we are creating a new commit or amending
@@ -64,6 +78,26 @@ func main() {
 			commitOrAmend(creatingNewCommit, result)
 			os.Exit(0)
 		}
+	}
+
+	// Agent: process answers file (skips TUI and final confirmation)
+	if *answersFlag != "" {
+		answers, err := agent.LoadAnswers(*answersFlag)
+		if err != nil {
+			output.PrintError("Error loading answers file: " + err.Error())
+			os.Exit(1)
+		}
+
+		result, err := prompt.ProcessAnswers(cfg, answers)
+		if err != nil {
+			if errors.Is(err, prompt.ErrAgentAborted) {
+				os.Exit(1)
+			}
+			os.Exit(1)
+		}
+
+		commitOrAmend(creatingNewCommit, result)
+		os.Exit(0)
 	}
 
 	// Process all elements
