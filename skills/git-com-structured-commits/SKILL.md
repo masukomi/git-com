@@ -32,7 +32,7 @@ If this returns a non-zero exit code, use `git commit` normally and stop.
 ### 2. Get the commit schema
 
 ```bash
-git-com -dump-instructions
+git-com --dump-instructions
 ```
 
 This outputs a YAML document under an `elements:` key. Each key under `elements:`
@@ -48,8 +48,8 @@ is a field you must fill in.
 | `type: multi-select` | YAML list of values from `options:` (unless `modifiable: true`) |
 | `type: confirmation` | `true` to proceed, `false` to abort the commit |
 | `required: true` | Field must have a non-empty, non-null value |
-| `required: false` | Field may be `null` if you have nothing to provide |
-| `agent-hint:` | Guidance on value length or format — follow it |
+| `required: false` | Field should be `null` if you have nothing to provide |
+| `agent-hint:` | Guidance for the value you provide — follow it |
 | `instructions:` | Describes what the field is asking for |
 
 ### 3. Create a temporary answers file
@@ -83,13 +83,13 @@ ticket-number: null
 ### 4. Run git-com with the answers file
 
 ```bash
-git-com -answers /tmp/git-com-answers-<timestamp>.yaml
+git-com --answers /tmp/git-com-answers-<timestamp>.yaml
 ```
 
 For amending the last commit instead:
 
 ```bash
-git-com -amend -answers /tmp/git-com-answers-<timestamp>.yaml
+git-com --amend --answers /tmp/git-com-answers-<timestamp>.yaml
 ```
 
 ### 5. Clean up

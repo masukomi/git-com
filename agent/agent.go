@@ -42,7 +42,7 @@ func DumpInstructions(cfg *config.Config) ([]byte, error) {
 		return nil, err
 	}
 
-	header := []byte("# git-com agent instructions\n# Fill in values and run: git-com -answers <answers-file>\n")
+	header := []byte("# git-com agent instructions\n# Fill in values and run: git-com --answers <answers-file>\n")
 	return append(header, data...), nil
 }
 

@@ -85,8 +85,8 @@ func TestDumpInstructions_HeaderComment(t *testing.T) {
 	if !strings.HasPrefix(string(out), "# git-com agent instructions\n") {
 		t.Errorf("output missing expected header comment, got:\n%s", out)
 	}
-	if !strings.Contains(string(out), "git-com -answers") {
-		t.Errorf("output missing -answers hint, got:\n%s", out)
+	if !strings.Contains(string(out), "git-com --answers") {
+		t.Errorf("output missing --answers hint, got:\n%s", out)
 	}
 }
 
