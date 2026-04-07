@@ -28,6 +28,7 @@ commit-description:
     allow-empty: true
     destination: body
     instructions: Please describe your changes.
+    agent-hint: "This should be the same detailed summary you have, or would have provided the user about your changes."
     type: multiline-text
     after-string: "\n"
 code-sections:
