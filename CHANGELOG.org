@@ -1,3 +1,10 @@
+* v1.9.0
+
+** [added]
+- non-interactive support for agents
+- added git-com-structured-commits skill
+- document agent flags and skill in README
+
 * v1.8.0
 
 ** [refactored]
