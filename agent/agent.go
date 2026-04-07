@@ -86,8 +86,10 @@ func buildInstructionElement(elem config.Element) instructionElement {
 		ie.Limit = elem.Limit
 	}
 
-	// agent-hint for text type only, based on destination
-	if effectiveType == config.TypeText {
+	// agent-hint: use config value if present, otherwise auto-generate for text type
+	if elem.AgentHint != "" {
+		ie.AgentHint = elem.AgentHint
+	} else if effectiveType == config.TypeText {
 		if elem.Destination == config.DestTitle {
 			ie.AgentHint = shortTitleTextHint
 		} else if elem.Destination == config.DestBody {

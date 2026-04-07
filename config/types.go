@@ -65,6 +65,7 @@ type Element struct {
 	// Text-specific attributes
 	Placeholder string   `yaml:"placeholder,omitempty"`
 	DataType    DataType `yaml:"data-type,omitempty"`
+	AgentHint   string   `yaml:"agent-hint,omitempty"`
 
 	// Select/Multi-select attributes
 	Options    []string `yaml:"options,omitempty"`

@@ -336,6 +336,16 @@ func TestDumpInstructions_AgentHint(t *testing.T) {
 			elem:     config.Element{Name: "e", Type: config.TypeConfirmation},
 			wantHint: "",
 		},
+		{
+			name:     "config-supplied agent-hint overrides auto-generated hint",
+			elem:     config.Element{Name: "e", Type: config.TypeText, Destination: config.DestTitle, AgentHint: "custom hint from config"},
+			wantHint: "custom hint from config",
+		},
+		{
+			name:     "config-supplied agent-hint works on non-text types",
+			elem:     config.Element{Name: "e", Type: config.TypeSelect, Destination: config.DestTitle, Options: []string{"a"}, AgentHint: "pick carefully"},
+			wantHint: "pick carefully",
+		},
 	}
 
 	for _, tt := range tests {
