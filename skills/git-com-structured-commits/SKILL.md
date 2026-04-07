@@ -54,7 +54,11 @@ is a field you must fill in.
 
 ### 3. Create a temporary answers file
 
-Create a file at `/tmp/git-com-answers-<timestamp>.yaml`.
+```bash
+ANSWERS_FILE=$(mktemp /tmp/git-com-answers-XXXXXX.yaml)
+```
+
+Write the answers content to `$ANSWERS_FILE`.
 
 The answers file is a flat YAML key-value document. It must contain one key for
 every key listed under `elements:` in the dump-instructions output.
@@ -83,19 +87,19 @@ ticket-number: null
 ### 4. Run git-com with the answers file
 
 ```bash
-git-com --answers /tmp/git-com-answers-<timestamp>.yaml
+git-com --answers "$ANSWERS_FILE"
 ```
 
 For amending the last commit instead:
 
 ```bash
-git-com --amend --answers /tmp/git-com-answers-<timestamp>.yaml
+git-com --amend --answers "$ANSWERS_FILE"
 ```
 
 ### 5. Clean up
 
-- If the commit succeeded: delete the temporary answers file
-- If the commit failed (non-zero exit): leave the file for inspection, report the error
+- If the commit succeeded: `rm "$ANSWERS_FILE"`
+- If the commit failed (non-zero exit): leave `$ANSWERS_FILE` for inspection, report the error
 
 ## Error Handling
 
