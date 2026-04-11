@@ -11,6 +11,7 @@ change-type:
         - add
         - refactor
         - clean-up
+    agent-hint: "Use 'fix' only for bug corrections. Use 'add' for new features or behaviors. Use 'refactor' for restructuring without behaviour change. Use 'clean-up' for things like deleting obsolete code or changing user-facing text."
 breaking-indicator:
   type: select
   destination: title
