@@ -9,8 +9,8 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-const shortTitleTextHint = "Keep under 50 characters if possible; shorter is better"
-const shortBodyTextHint = "Keep under 120 characters if possible"
+const shortTitleTextHint = "Limit answer to 50 characters if possible; shorter is better"
+const shortBodyTextHint = "Keep answer under 120 characters if possible"
 
 // instructionElement is the structure for each element in the dump-instructions output.
 type instructionElement struct {

@@ -20,11 +20,18 @@ func main() {
 	amendFlag := flag.Bool("amend", false, "Amend the last commit")
 	dumpInstructionsFlag := flag.Bool("dump-instructions", false, "Output agent instructions YAML and exit")
 	answersFlag := flag.String("answers", "", "Path to answers YAML file for non-interactive mode")
+	hasConfigFlag := flag.Bool("has-config", false, "Check if a valid config exists; outputs true/false and exits")
+	useCachedMessageFlag := flag.Bool("use-cached-message", false, "Use the cached commit message from the last failed attempt")
+	dontUseCachedMessageFlag := flag.Bool("dont-use-cached-message", false, "Delete and do not use any cached commit message")
 	flag.Parse()
 
 	// Load configuration from git root
 	cfg, err := config.LoadConfig()
 	if err != nil {
+		if *hasConfigFlag {
+			fmt.Println("false")
+			os.Exit(78)
+		}
 		if errors.Is(err, config.ErrConfigNotFound) {
 			output.PrintError("Config file .git-com.yaml not found in git repository root")
 		} else if errors.Is(err, config.ErrNotInGitRepo) {
@@ -33,6 +40,11 @@ func main() {
 			output.PrintError("Error loading config: " + err.Error())
 		}
 		os.Exit(1)
+	}
+
+	if *hasConfigFlag {
+		fmt.Println("true")
+		os.Exit(0)
 	}
 
 	// Validate configuration
@@ -73,10 +85,29 @@ func main() {
 	if creatingNewCommit {
 		verifyStagedFiles()
 
-		if result := offerPendingCommit(); result != nil {
-			performFinalConfirmation(result)
+		if *dontUseCachedMessageFlag {
+			_ = commit.DeletePendingCommit()
+			// fall through to normal interactive flow
+		} else if *useCachedMessageFlag {
+			title, body, found, err := commit.LoadPendingCommit()
+			if err != nil {
+				output.PrintError("Error loading cached commit message: " + err.Error())
+				os.Exit(1)
+			}
+			if !found {
+				output.PrintError("No cached commit message found.")
+				os.Exit(65) // EX_DATAERR
+			}
+			result := &prompt.Result{Title: title, Body: body}
+			// No final confirmation — these flags are for non-interactive agent use
 			commitOrAmend(creatingNewCommit, result)
 			os.Exit(0)
+		} else {
+			if result := offerPendingCommit(); result != nil {
+				performFinalConfirmation(result)
+				commitOrAmend(creatingNewCommit, result)
+				os.Exit(0)
+			}
 		}
 	}
 

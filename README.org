@@ -107,6 +107,9 @@ These flags are intended for use by AI agents and scripts, not humans. If you ar
 - =--dump-instructions= :: Prints a YAML document describing the commit schema — element names, types, options, and requirements — then exits. Agents use this to learn what a valid answers file should contain.
 - =--answers <path>= :: Reads a YAML answers file and creates the commit non-interactively, skipping all TUI prompts. The answers file must contain one key per element from the =--dump-instructions= output.
 - =--amend= :: Amends the last commit instead of creating a new one. Can be combined with =--answers= for non-interactive amends: =git-com --amend --answers /path/to/answers.yaml=.
+- =--has-config= :: Checks whether a valid =.git-com.y[a]ml= config can be loaded. Prints =true= and exits 0 on success; prints =false= and exits 78 (EX_CONFIG) on failure. Useful for scripts and agents that need to detect git-com support before proceeding.
+- =--use-cached-message= :: Uses the cached commit message saved from the last failed attempt (e.g. a rejected pre-commit hook) and commits immediately, skipping all interactive prompts. Prints an error to stderr and exits 65 (EX_DATAERR) if no cached message exists.
+- =--dont-use-cached-message= :: Discards any cached commit message from a previous failed attempt and proceeds with the normal interactive flow. Has no effect and produces no error if no cached message exists.
 
 * Teaching Agents To Use git-com
 
@@ -168,5 +171,4 @@ change-type:
     agent-hint: "Use 'fix' only for bug corrections. Use 'add' for new features or files. Use 'refactor' for restructuring without behaviour change."
 #+end_src
 
-If no =agent-hint= is provided, git-com automatically adds a character-length hint for =text= elements based on their destination (title vs. body).
-
+If no =agent-hint= is provided, git-com automatically adds a character-length hint for =text= elements based on their destination (title vs. body). In general the "instructions" you provide for the humans are sufficient for the agents to do the right thing.
