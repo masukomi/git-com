@@ -1,3 +1,8 @@
+* v1.10.0
+
+** [added]
+- 3 flags to help agentic platforms
+
 * v1.9.0
 
 ** [added]
