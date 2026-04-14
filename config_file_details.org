@@ -584,6 +584,7 @@ Having a pulldown for what part of a project the commit pertains to is one of th
 - keep the options short. E.g. use "docs" instead of "documentation"
 
 [[https://martijnhols.nl/blog/how-to-write-a-good-git-commit-message][An ideal commit message]] has a title of 50 characters or less, after 72 characters many tools (including GitHub) start cutting things off. That's not a lot to work with. Specifying the part of the project helps save some descriptive words, but can also hurt if the option is too long.
+
 ** Modifiable Lists
 When =modifiable: true= is set on a select or multi-select element, an "Other…" option appears at the bottom of the list. Selecting it prompts for a new value, which is:
 1. Used in the current commit
@@ -598,6 +599,7 @@ Use =before-string= and =after-string= to add formatting without requiring user 
 - Add newlines in body elements with ="\n"= for spacing
 
 💡 Tip: If text will follow on the same line, be sure to include a trailing space in your =after-string=. Ex. use =": "= not =":"=
+
 ** Optional vs Required
 By default, all elements require input. Set =allow-empty: true= to make an element optional. For multi-select, you can customize the skip option text with =empty-selection-text=.
 
@@ -605,3 +607,6 @@ By default, all elements require input. Set =allow-empty: true= to make an eleme
 Emoji are fine within the body of a commit, but don't use them in more structured elements like select options. A single emoji can be comprised of multiple code-points which are invisibly combined, and can cause headaches when trying to find matching commits.
 
 If it's something you're going to be searching for, or using to generate reports, don't include emoji in it.
+
+** Options & Agentic Systems
+When you've got a list of =options=, try and avoid abbreviations for anything that isn't destined for the =title=. If you do abbreviate something, be sure to add an =agent-hint= that includes an explanation of what that option means so that an agentic system will be able to choose intelligently. For example, I wanted to abbreviate =social_media_accounts= to =sm_accounts= but I doubt that agentic systems would know that I meant =social_media_accounts= and thus it probably wouldn't choose it when it should.
