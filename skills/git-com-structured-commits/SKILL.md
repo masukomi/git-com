@@ -67,7 +67,8 @@ Note: ANSWERS_FILE is never at `git-com-answers-XXXXXX.yaml` It is at the path g
 Write the answers content to `$ANSWERS_FILE`.
 
 The answers file is a flat YAML key-value document. It must contain one key for
-every key listed under `elements:` in the dump-instructions output.
+every key listed under `elements:` in the dump-instructions output. Do  not wrap 
+long lines of text. `git-com` will do this for you.
 
 Rules:
 - For `required: true` elements: provide a value that satisfies the type constraints

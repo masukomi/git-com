@@ -117,21 +117,31 @@ AI coding agents (such as Claude Code) will typically run =git commit= directly,
 
 ** Installing the Skill
 
-The skill lives in the =skills/git-com-structured-commits/= directory of this repository. Copy it to your Claude Code skills directory:
+The skill lives in the =skills/git-com-structured-commits/= directory of this repository. Copy it to your global skills directory so that it will be available across all of your coding projects.
 
+Installing for Claude Code:
 #+begin_src bash
 cp -r skills/git-com-structured-commits ~/.claude/skills/
 #+end_src
 
-*** Global vs. Per-Project Installation
+*** Global vs. Per-Project Configuration
 
-If you use git-com across most of your repositories, install the skill globally by adding a line to =~/.claude/CLAUDE.md= (create the file if it doesn't exist):
+As noted above, if you use =git-com= across most of your repositories, it's best to install the skill globally and instruct your agents to use it by default.
+
+
+Do this by adding the following line to your agent's global config file.
 
 #+begin_src
 When making git commits, use the git-com-structured-commits skill if git-com is available.
 #+end_src
 
-This tells any Claude Code agent in any repo to check for git-com before committing. For repos where you only want this behaviour sometimes, add the same line to that repo's =CLAUDE.md= instead.
+Claude Code users should add that line to =~/.claude/CLAUDE.md=
+
+In combination with the skill, this tells the agents in any repository to check for =git-com= before committing.
+
+If only a small subset of your repositories use =git-com= add the same line to that repo's agent config instead.
+
+Claude code users would add this to the =CLAUDE.md= at the root of their project.
 
 ** How It Works
 
